@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master, dev]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    environment: ${{ github.ref_name == 'master' && 'prod' || 'dev' }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Required for CalVer tag enumeration
+
+      - name: Create CalVer tag
+        if: github.ref_name == 'master'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          YEAR=$(date +%Y)
+          MONTH=$(date +%m)
+          PREFIX="${YEAR}.${MONTH}"
+
+          # Find the highest existing PATCH for this YYYY.MM prefix
+          LATEST=$(git tag --list "${PREFIX}.*" | sort -t. -k3 -n | tail -1)
+
+          if [[ -z "$LATEST" ]]; then
+            PATCH="01"
+          else
+            CURRENT_PATCH=$(echo "$LATEST" | cut -d. -f3)
+            PATCH=$(printf "%02d" $((10#$CURRENT_PATCH + 1)))
+          fi
+
+          TAG="${PREFIX}.${PATCH}"
+          git tag "$TAG"
+          git push origin "$TAG"
