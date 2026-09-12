@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { getCourses, getTaxonomies, Course, TaxonomyItem } from './api';
+import { getCourses, getTaxonomies, api } from './api';
+import type { Course, TaxonomyItem } from './api';
 import CourseForm from './components/CourseForm';
 
 export default function App() {

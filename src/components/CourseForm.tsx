@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getTaxonomies, TaxonomyItem, api } from '../api';
+import { getTaxonomies, api } from '../api';
+import type { TaxonomyItem } from '../api';
 
 export default function CourseForm() {
   const { id } = useParams();
