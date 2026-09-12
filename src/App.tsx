@@ -10,6 +10,7 @@ export default function App() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
+          <img src="/logo.png" alt="PerfXcel Logo" className="h-8 w-8 mr-3 object-contain" />
           <h1 className="text-xl font-semibold tracking-tight text-indigo-600">Perfxcel Admin</h1>
         </div>
         <nav className="flex-1 p-4 space-y-2">
