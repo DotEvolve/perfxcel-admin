@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:5002/api/v1';
+const API_BASE_URL = "http://localhost:5002/api/v1";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -27,11 +27,11 @@ export interface TaxonomyItem {
 }
 
 export const getCourses = async (): Promise<Course[]> => {
-  const response = await api.get('/courses');
+  const response = await api.get("/courses");
   return response.data.data;
 };
 
 export const getTaxonomies = async () => {
-  const response = await api.get('/taxonomies');
+  const response = await api.get("/taxonomies");
   return response.data.data;
 };
