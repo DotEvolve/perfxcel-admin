@@ -33,7 +33,7 @@ function Layout() {
             className="h-8 w-8 mr-3 object-contain"
           />
           <h1 className="text-xl font-semibold tracking-tight text-indigo-600">
-            Perfxcel Admin
+            PerfXcel Admin
           </h1>
         </div>
         <nav className="flex-1 p-4 space-y-2">
@@ -116,7 +116,7 @@ function Dashboard() {
   return (
     <div>
       <h3 className="text-2xl font-semibold mb-4">Dashboard</h3>
-      <p className="text-gray-600">Welcome to the Perfxcel LMS Admin Portal.</p>
+      <p className="text-gray-600">Welcome to the PerfXcel LMS Admin Portal.</p>
     </div>
   );
 }
