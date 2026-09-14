@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getInterests, updateInterestStatus } from "../api";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, Download } from "lucide-react";
 
 export default function Interests() {
   const [interests, setInterests] = useState<any[]>([]);
@@ -131,12 +131,56 @@ export default function Interests() {
     return result;
   }, [interests, searchQuery, statusFilter, sortField, sortOrder]);
 
+  const handleDownloadCSV = () => {
+    if (filteredAndSortedInterests.length === 0) {
+      alert("No data to download.");
+      return;
+    }
+
+    const headers = ["Date", "Name", "Email", "Phone", "Course", "Company", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredAndSortedInterests.map((i) => {
+        const date = new Date(i.created_at).toLocaleDateString();
+        // Escape quotes by doubling them, wrap in quotes to handle commas
+        const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+        
+        return [
+          date,
+          escapeCSV(i.name),
+          escapeCSV(i.email),
+          escapeCSV(i.phone),
+          escapeCSV(i.courses?.title),
+          escapeCSV(i.company),
+          escapeCSV(i.status)
+        ].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `registered_interests_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) return <div className="text-gray-500 py-10">Loading interests...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Registered Interests</h1>
+        <button
+          onClick={handleDownloadCSV}
+          disabled={filteredAndSortedInterests.length === 0}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
