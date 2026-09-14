@@ -1,7 +1,8 @@
 import axios from "axios";
 import { supabase } from "./lib/supabase";
 
-const API_BASE_URL = "http://localhost:5002/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://api-dev.perfxcel.com/api/v1";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
