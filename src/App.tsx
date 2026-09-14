@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Link, useNavigate, Navigate, Outlet } from "react-router-dom";
-import { getCourses, getTaxonomies, api } from "./api";
-import type { Course, TaxonomyItem } from "./api";
+import { getTaxonomies, api } from "./api";
+import type { TaxonomyItem } from "./api";
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { Login } from "./pages/Login";
 import Interests from "./pages/Interests";
 import Enrollments from "./pages/Enrollments";
+import { CoursesList } from "./pages/CoursesList";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -126,83 +127,14 @@ function Dashboard() {
   );
 }
 
-function CoursesList() {
-  const navigate = useNavigate();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getCourses()
-      .then(setCourses)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-semibold">Courses</h3>
-        <button
-          onClick={() => navigate("/courses/new")}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
-        >
-          Add Course
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-10 text-gray-500">
-          Loading courses...
-        </div>
-      ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {courses.length === 0 ? (
-              <li className="p-6 text-center text-gray-500">
-                No courses found.
-              </li>
-            ) : (
-              courses.map((course) => (
-                <li
-                  key={course.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-gray-50"
-                >
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">
-                      {course.title}
-                    </h4>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {course.categories?.name} • {course.cities?.name}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
-                    >
-                      {course.is_published ? "Published" : "Draft"}
-                    </span>
-                    <button
-                      onClick={() => navigate(`/courses/${course.id}/edit`)}
-                      className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function Taxonomies() {
   const [data, setData] = useState<{
     categories: TaxonomyItem[];
     cities: TaxonomyItem[];
     associations: TaxonomyItem[];
+    delivery_modes: TaxonomyItem[];
   } | null>(null);
 
   const fetchTaxonomies = () => {
@@ -239,6 +171,12 @@ function Taxonomies() {
             title="Associations"
             type="associations"
             items={data.associations}
+            onAdd={fetchTaxonomies}
+          />
+          <TaxonomyCard
+            title="Delivery Modes"
+            type="delivery_modes"
+            items={data.delivery_modes}
             onAdd={fetchTaxonomies}
           />
         </div>

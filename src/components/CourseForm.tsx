@@ -17,11 +17,13 @@ export default function CourseForm() {
   const [categoryId, setCategoryId] = useState("");
   const [cityId, setCityId] = useState("");
   const [associationId, setAssociationId] = useState("");
+  const [deliveryModeId, setDeliveryModeId] = useState("");
 
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
     cities: TaxonomyItem[];
     associations: TaxonomyItem[];
+    delivery_modes: TaxonomyItem[];
   } | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function CourseForm() {
           setCategoryId(course.category_id || "");
           setCityId(course.city_id || "");
           setAssociationId(course.association_id || "");
+          setDeliveryModeId(course.delivery_mode_id || "");
         })
         .catch(console.error);
     }
@@ -56,6 +59,7 @@ export default function CourseForm() {
       category_id: categoryId || null,
       city_id: cityId || null,
       association_id: associationId || null,
+      delivery_mode_id: deliveryModeId || null,
     };
 
     try {
@@ -141,7 +145,7 @@ export default function CourseForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
@@ -187,6 +191,23 @@ export default function CourseForm() {
             >
               <option value="">None</option>
               {taxonomies.associations.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Mode
+            </label>
+            <select
+              value={deliveryModeId}
+              onChange={(e) => setDeliveryModeId(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-2"
+            >
+              <option value="">None</option>
+              {taxonomies.delivery_modes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

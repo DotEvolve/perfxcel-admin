@@ -26,9 +26,11 @@ export interface Course {
   category_id: string | null;
   city_id: string | null;
   association_id: string | null;
+  delivery_mode_id: string | null;
   categories?: TaxonomyItem | null;
   cities?: TaxonomyItem | null;
   associations?: TaxonomyItem | null;
+  delivery_modes?: TaxonomyItem | null;
 }
 
 export interface TaxonomyItem {
@@ -36,14 +38,21 @@ export interface TaxonomyItem {
   name: string;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const deleteCourse = async (id: string) => {
   const response = await api.delete(`/courses/${id}`);
   return response.data;
 };
 
-export const getInterests = async () => {
-  const response = await api.get("/interests");
-  return response.data.data;
+export const getInterests = async (params?: Record<string, any>): Promise<PaginatedResponse<any>> => {
+  const response = await api.get("/interests", { params });
+  return response.data;
 };
 
 export const updateInterestStatus = async (id: string, status: string) => {
@@ -51,9 +60,14 @@ export const updateInterestStatus = async (id: string, status: string) => {
   return response.data;
 };
 
-export const getCourses = async (): Promise<Course[]> => {
-  const response = await api.get("/courses");
-  return response.data.data;
+export const getCourses = async (params?: Record<string, any>): Promise<PaginatedResponse<Course>> => {
+  const response = await api.get("/courses", { params });
+  return response.data;
+};
+
+export const bulkUpdateCourses = async (ids: string[], updates: Partial<Course>) => {
+  const response = await api.patch("/courses/bulk", { ids, updates });
+  return response.data;
 };
 
 export const getTaxonomies = async () => {
@@ -61,7 +75,10 @@ export const getTaxonomies = async () => {
   return response.data.data;
 };
 
-export const getEnrollments = () => api.get("/enrollments").then(r => r.data.data);
+export const getEnrollments = async (params?: Record<string, any>): Promise<PaginatedResponse<any>> => {
+  const response = await api.get("/enrollments", { params });
+  return response.data;
+};
 
 export const createEnrollment = (interestId: string) =>
   api.post("/enrollments", { interest_id: interestId }).then(r => r.data.data);

@@ -1,35 +1,54 @@
-import { useState, useEffect, useMemo } from "react";
-import { getInterests, updateInterestStatus, createEnrollment } from "../api";
+import { useState, useEffect } from "react";
+import { getInterests, updateInterestStatus, createEnrollment, getCourses } from "../api";
+import type { PaginatedResponse } from "../api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
+import { Pagination } from "../components/Pagination";
 
 export default function Interests() {
   const [interests, setInterests] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [converting, setConverting] = useState<string | null>(null);
   const [convertError, setConvertError] = useState<Record<string, string>>({});
 
   // Filters and Sorting State
+  const [page, setPage] = useState(1);
+  const limit = 20;
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortField, setSortField] = useState<"date" | "name" | "course" | "company" | "status">("date");
+  const [courseFilter, setCourseFilter] = useState("all");
+  const [sortField, setSortField] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  const [courses, setCourses] = useState<any[]>([]);
+
   useEffect(() => {
-    loadInterests();
+    // We only need the course titles for the filter dropdown
+    getCourses({ limit: 1000 }).then(res => setCourses(res.data)).catch(console.error);
   }, []);
 
   const loadInterests = async () => {
     setLoading(true);
     try {
-      const data = await getInterests();
-      setInterests(data);
+      const params: any = { page, limit, sort: `${sortField}:${sortOrder}` };
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (courseFilter !== "all") params.course_id = courseFilter;
+
+      const data: PaginatedResponse<any> = await getInterests(params);
+      setInterests(data.data);
+      setTotal(data.total);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadInterests();
+  }, [page, limit, searchQuery, statusFilter, courseFilter, sortField, sortOrder]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     setUpdating(id);
@@ -76,16 +95,16 @@ export default function Interests() {
     }
   };
 
-  const handleSort = (field: typeof sortField) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder("asc"); // default to asc when switching fields (except date maybe, but simple is good)
+      setSortOrder("asc"); 
     }
   };
 
-  const SortIcon = ({ field }: { field: typeof sortField }) => {
+  const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field) return null;
     return sortOrder === "asc" ? (
       <ChevronUp className="w-4 h-4 inline-block ml-1" />
@@ -94,99 +113,53 @@ export default function Interests() {
     );
   };
 
-  const filteredAndSortedInterests = useMemo(() => {
-    let result = [...interests];
+  const handleDownloadCSV = async () => {
+    try {
+      // Fetch all matching filters without pagination for CSV export
+      const params: any = { limit: 10000, sort: `${sortField}:${sortOrder}` };
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== "all") params.status = statusFilter;
+      if (courseFilter !== "all") params.course_id = courseFilter;
 
-    // Filter by Search Query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (i) =>
-          i.name?.toLowerCase().includes(query) ||
-          i.email?.toLowerCase().includes(query) ||
-          i.company?.toLowerCase().includes(query) ||
-          i.courses?.title?.toLowerCase().includes(query)
-      );
-    }
-
-    // Filter by Status
-    if (statusFilter !== "all") {
-      result = result.filter((i) => i.status === statusFilter);
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortField) {
-        case "date":
-          aValue = new Date(a.created_at).getTime();
-          bValue = new Date(b.created_at).getTime();
-          break;
-        case "name":
-          aValue = a.name?.toLowerCase() || "";
-          bValue = b.name?.toLowerCase() || "";
-          break;
-        case "course":
-          aValue = a.courses?.title?.toLowerCase() || "";
-          bValue = b.courses?.title?.toLowerCase() || "";
-          break;
-        case "company":
-          aValue = a.company?.toLowerCase() || "";
-          bValue = b.company?.toLowerCase() || "";
-          break;
-        case "status":
-          aValue = a.status?.toLowerCase() || "";
-          bValue = b.status?.toLowerCase() || "";
-          break;
+      const res: PaginatedResponse<any> = await getInterests(params);
+      
+      if (res.data.length === 0) {
+        alert("No data to download.");
+        return;
       }
 
-      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
+      const headers = ["Date", "Name", "Email", "Phone", "Course", "Company", "Status"];
+      const csvContent = [
+        headers.join(","),
+        ...res.data.map((i: any) => {
+          const date = new Date(i.created_at).toLocaleDateString();
+          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+          
+          return [
+            date,
+            escapeCSV(i.name),
+            escapeCSV(i.email),
+            escapeCSV(i.phone),
+            escapeCSV(i.courses?.title),
+            escapeCSV(i.company),
+            escapeCSV(i.status)
+          ].join(",");
+        }),
+      ].join("\n");
 
-    return result;
-  }, [interests, searchQuery, statusFilter, sortField, sortOrder]);
-
-  const handleDownloadCSV = () => {
-    if (filteredAndSortedInterests.length === 0) {
-      alert("No data to download.");
-      return;
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `registered_interests_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch(err) {
+      console.error(err);
+      alert("Failed to download CSV");
     }
-
-    const headers = ["Date", "Name", "Email", "Phone", "Course", "Company", "Status"];
-    const csvContent = [
-      headers.join(","),
-      ...filteredAndSortedInterests.map((i) => {
-        const date = new Date(i.created_at).toLocaleDateString();
-        // Escape quotes by doubling them, wrap in quotes to handle commas
-        const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
-        
-        return [
-          date,
-          escapeCSV(i.name),
-          escapeCSV(i.email),
-          escapeCSV(i.phone),
-          escapeCSV(i.courses?.title),
-          escapeCSV(i.company),
-          escapeCSV(i.status)
-        ].join(",");
-      }),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `registered_interests_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
-
-  if (loading) return <div className="text-gray-500 py-10">Loading interests...</div>;
 
   return (
     <div className="space-y-6">
@@ -194,8 +167,8 @@ export default function Interests() {
         <h1 className="text-2xl font-bold text-gray-900">Registered Interests</h1>
         <button
           onClick={handleDownloadCSV}
-          disabled={filteredAndSortedInterests.length === 0}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={total === 0}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="w-4 h-4 mr-2" />
           Export CSV
@@ -205,15 +178,15 @@ export default function Interests() {
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <input
           type="text"
-          placeholder="Search name, email, company, or course..."
-          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2 px-3 border"
+          placeholder="Search name, email, company..."
+          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
         />
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2 px-3 border bg-white"
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white"
         >
           <option value="all">All Statuses</option>
           <option value="new">New</option>
@@ -221,110 +194,126 @@ export default function Interests() {
           <option value="enrolled">Enrolled</option>
           <option value="rejected">Rejected</option>
         </select>
+        <select
+          value={courseFilter}
+          onChange={(e) => { setCourseFilter(e.target.value); setPage(1); }}
+          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white max-w-xs"
+        >
+          <option value="all">All Courses</option>
+          {courses.map(c => (
+            <option key={c.id} value={c.id}>{c.title}</option>
+          ))}
+        </select>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 select-none">
-              <tr>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("date")}
-                >
-                  Date <SortIcon field="date" />
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("name")}
-                >
-                  Name & Contact <SortIcon field="name" />
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("course")}
-                >
-                  Course <SortIcon field="course" />
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("company")}
-                >
-                  Company <SortIcon field="company" />
-                </th>
-                <th 
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("status")}
-                >
-                  Status <SortIcon field="status" />
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAndSortedInterests.map((interest) => (
-                <tr key={interest.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(interest.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{interest.name}</div>
-                    <div className="text-sm text-gray-500">{interest.email}</div>
-                    {interest.phone && <div className="text-sm text-gray-500">{interest.phone}</div>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {interest.courses?.title || "Unknown Course"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {interest.company || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(interest.status)}`}>
-                      {interest.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <select
-                      value={interest.status}
-                      onChange={(e) => handleUpdateStatus(interest.id, e.target.value)}
-                      disabled={updating === interest.id || converting === interest.id}
-                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 inline-block mr-2"
+      <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200 flex flex-col">
+        {loading ? (
+          <div className="text-center py-10 text-gray-500">Loading interests...</div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 select-none">
+                  <tr>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort("created_at")}
                     >
-                      <option value="new">New</option>
-                      <option value="contacted">Contacted</option>
-                      <option value="enrolled">Enrolled</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
-
-                    {interest.status === "enrolled" && (
-                      <div className="inline-block flex-col align-top">
-                        <button
-                          onClick={() => handleConvertToEnrollment(interest.id)}
-                          disabled={converting === interest.id}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                      Date <SortIcon field="created_at" />
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort("name")}
+                    >
+                      Name & Contact <SortIcon field="name" />
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    >
+                      Course
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort("company")}
+                    >
+                      Company <SortIcon field="company" />
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort("status")}
+                    >
+                      Status <SortIcon field="status" />
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {interests.map((interest) => (
+                    <tr key={interest.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(interest.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{interest.name}</div>
+                        <div className="text-sm text-gray-500">{interest.email}</div>
+                        {interest.phone && <div className="text-sm text-gray-500">{interest.phone}</div>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {interest.courses?.title || "Unknown Course"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {interest.company || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(interest.status)}`}>
+                          {interest.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <select
+                          value={interest.status}
+                          onChange={(e) => handleUpdateStatus(interest.id, e.target.value)}
+                          disabled={updating === interest.id || converting === interest.id}
+                          className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 inline-block mr-2"
                         >
-                          {converting === interest.id ? "Converting..." : "Convert to Enrollment"}
-                        </button>
-                        {convertError[interest.id] && (
-                          <div className="text-red-500 text-xs mt-1 block">
-                            {convertError[interest.id]}
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="enrolled">Enrolled</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+
+                        {interest.status === "enrolled" && (
+                          <div className="inline-block flex-col align-top">
+                            <button
+                              onClick={() => handleConvertToEnrollment(interest.id)}
+                              disabled={converting === interest.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {converting === interest.id ? "Converting..." : "Convert to Enrollment"}
+                            </button>
+                            {convertError[interest.id] && (
+                              <div className="text-red-500 text-xs mt-1 block">
+                                {convertError[interest.id]}
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {filteredAndSortedInterests.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No registered interests match your filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {interests.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                        No registered interests match your filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <Pagination page={page} limit={limit} total={total} onPageChange={setPage} />
+          </>
+        )}
       </div>
     </div>
   );
