@@ -60,3 +60,11 @@ export const getTaxonomies = async () => {
   const response = await api.get("/taxonomies");
   return response.data.data;
 };
+
+export const getEnrollments = () => api.get("/enrollments").then(r => r.data.data);
+
+export const createEnrollment = (interestId: string) =>
+  api.post("/enrollments", { interest_id: interestId }).then(r => r.data.data);
+
+export const updateEnrollmentStatus = (id: string, status: string) =>
+  api.patch(`/enrollments/${id}`, { status }).then(r => r.data.data);

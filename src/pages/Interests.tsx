@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { getInterests, updateInterestStatus } from "../api";
+import { getInterests, updateInterestStatus, createEnrollment } from "../api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
 
 export default function Interests() {
   const [interests, setInterests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [converting, setConverting] = useState<string | null>(null);
+  const [convertError, setConvertError] = useState<Record<string, string>>({});
 
   // Filters and Sorting State
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,23 @@ export default function Interests() {
       alert("Failed to update status");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const handleConvertToEnrollment = async (id: string) => {
+    setConverting(id);
+    setConvertError((prev) => ({ ...prev, [id]: "" }));
+    try {
+      await createEnrollment(id);
+      await loadInterests();
+    } catch (err: any) {
+      console.error(err);
+      setConvertError((prev) => ({ 
+        ...prev, 
+        [id]: err.response?.data?.message || "Failed to convert"
+      }));
+    } finally {
+      setConverting(null);
     }
   };
 
@@ -268,14 +287,31 @@ export default function Interests() {
                     <select
                       value={interest.status}
                       onChange={(e) => handleUpdateStatus(interest.id, e.target.value)}
-                      disabled={updating === interest.id}
-                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50"
+                      disabled={updating === interest.id || converting === interest.id}
+                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 inline-block mr-2"
                     >
                       <option value="new">New</option>
                       <option value="contacted">Contacted</option>
                       <option value="enrolled">Enrolled</option>
                       <option value="rejected">Rejected</option>
                     </select>
+
+                    {interest.status === "enrolled" && (
+                      <div className="inline-block flex-col align-top">
+                        <button
+                          onClick={() => handleConvertToEnrollment(interest.id)}
+                          disabled={converting === interest.id}
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {converting === interest.id ? "Converting..." : "Convert to Enrollment"}
+                        </button>
+                        {convertError[interest.id] && (
+                          <div className="text-red-500 text-xs mt-1 block">
+                            {convertError[interest.id]}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -7,6 +7,7 @@ import { supabase } from "./lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { Login } from "./pages/Login";
 import Interests from "./pages/Interests";
+import Enrollments from "./pages/Enrollments";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -48,6 +49,9 @@ function Layout() {
           </Link>
           <Link to="/interests" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Interests
+          </Link>
+          <Link to="/enrollments" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+            Enrollments
           </Link>
         </nav>
       </aside>
@@ -106,6 +110,7 @@ export default function App() {
         <Route path="/courses/:id/edit" element={<CourseForm />} />
         <Route path="/taxonomies" element={<Taxonomies />} />
         <Route path="/interests" element={<Interests />} />
+        <Route path="/enrollments" element={<Enrollments />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
