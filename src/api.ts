@@ -36,6 +36,21 @@ export interface TaxonomyItem {
   name: string;
 }
 
+export const deleteCourse = async (id: string) => {
+  const response = await api.delete(`/courses/${id}`);
+  return response.data;
+};
+
+export const getInterests = async () => {
+  const response = await api.get("/interests");
+  return response.data.data;
+};
+
+export const updateInterestStatus = async (id: string, status: string) => {
+  const response = await api.patch(`/interests/${id}`, { status });
+  return response.data;
+};
+
 export const getCourses = async (): Promise<Course[]> => {
   const response = await api.get("/courses");
   return response.data.data;
