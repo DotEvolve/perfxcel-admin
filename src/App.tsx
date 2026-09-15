@@ -9,6 +9,7 @@ import { Login } from "./pages/Login";
 import Interests from "./pages/Interests";
 import Enrollments from "./pages/Enrollments";
 import { CoursesList } from "./pages/CoursesList";
+import Dashboard from "./pages/Dashboard";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -118,14 +119,6 @@ export default function App() {
   );
 }
 
-function Dashboard() {
-  return (
-    <div>
-      <h3 className="text-2xl font-semibold mb-4">Dashboard</h3>
-      <p className="text-gray-600">Welcome to the PerfXcel LMS Admin Portal.</p>
-    </div>
-  );
-}
 
 
 

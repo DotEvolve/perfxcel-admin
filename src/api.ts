@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { DashboardMetrics } from "./types/metrics";
 import { supabase } from "./lib/supabase";
 
 const API_BASE_URL =
@@ -48,6 +49,16 @@ export interface PaginatedResponse<T> {
 export const deleteCourse = async (id: string) => {
   const response = await api.delete(`/courses/${id}`);
   return response.data;
+};
+
+export const deleteEnrollment = async (id: string) => {
+  const response = await api.delete(`/enrollments/${id}`);
+  return response.data;
+};
+
+export const getMetrics = async (): Promise<DashboardMetrics> => {
+  const response = await api.get("/metrics");
+  return response.data.data;
 };
 
 export const getInterests = async (params?: Record<string, any>): Promise<PaginatedResponse<any>> => {
