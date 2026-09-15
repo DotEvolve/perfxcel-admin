@@ -136,6 +136,13 @@ function Taxonomies() {
     associations: TaxonomyItem[];
     delivery_modes: TaxonomyItem[];
   } | null>(null);
+  
+  const [search, setSearch] = useState("");
+
+  const filterItems = (items: TaxonomyItem[]) => {
+    if (!search.trim()) return items;
+    return items.filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
+  };
 
   const fetchTaxonomies = () => {
     getTaxonomies().then(setData).catch(console.error);
@@ -147,36 +154,45 @@ function Taxonomies() {
 
   return (
     <div>
-      <h3 className="text-2xl font-semibold mb-6">Taxonomies Management</h3>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-semibold">Taxonomies Management</h3>
+        <input 
+          type="text"
+          placeholder="Search items..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300 rounded-md px-3 py-1.5 min-w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
       {!data ? (
         <div className="text-center py-10 text-gray-500">
           Loading taxonomies...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <TaxonomyCard
             title="Categories"
             type="categories"
-            items={data.categories}
+            items={filterItems(data.categories)}
             onAdd={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Cities"
             type="cities"
-            items={data.cities}
+            items={filterItems(data.cities)}
             onAdd={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Associations"
             type="associations"
-            items={data.associations}
+            items={filterItems(data.associations)}
             onAdd={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Delivery Modes"
             type="delivery_modes"
-            items={data.delivery_modes}
+            items={filterItems(data.delivery_modes)}
             onAdd={fetchTaxonomies}
           />
         </div>
