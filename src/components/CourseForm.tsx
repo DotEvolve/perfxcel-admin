@@ -213,6 +213,31 @@ export default function CourseForm() {
               className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Image
+            </label>
+            <div className="flex items-start space-x-4">
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/jpeg"
+                  onChange={handleImageChange}
+                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">Only JPG format. Max size 1MB.</p>
+                {imageError && (
+                  <p className="mt-1 text-sm text-red-600">{imageError}</p>
+                )}
+              </div>
+              {imageUrl && (
+                <div className="w-32 h-24 relative rounded-md border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
+                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
