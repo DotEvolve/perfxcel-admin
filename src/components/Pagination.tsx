@@ -7,7 +7,7 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({ page, limit, total, onPageChange }: PaginationProps) {
+export default function Pagination({ page, limit, total, onPageChange }: PaginationProps) {
   const totalPages = Math.ceil(total / limit);
 
   if (totalPages <= 1) return null;

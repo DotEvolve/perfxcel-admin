@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getEnrollments, updateEnrollmentStatus } from "../lib/api";
 import type { PaginatedResponse } from "../lib/api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
-import { Pagination } from "../components/Pagination";
+import Pagination from "../components/Pagination";
 
 export interface Enrollment {
   id: string;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCourses, getTaxonomies, bulkUpdateCourses } from "../lib/api";
 import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
-import { Pagination } from "../components/Pagination";
+import Pagination from "../components/Pagination";
 
 export function CoursesList() {
   const navigate = useNavigate();
@@ -253,7 +253,11 @@ export function CoursesList() {
                           <td className="px-6 py-4">
                             <h4 className="text-sm font-medium text-gray-900">{course.title}</h4>
                             <p className="text-sm text-gray-500 mt-1">
-                              {[course.categories?.name, course.delivery_modes?.name, course.cities?.name].filter(Boolean).join(" • ")}
+                              {[
+                                course.categories?.map(c => c.name).join(", "),
+                                course.delivery_modes?.map(c => c.name).join(", "),
+                                course.cities?.map(c => c.name).join(", ")
+                              ].filter(Boolean).join(" • ")}
                             </p>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -280,7 +284,6 @@ export function CoursesList() {
 
       {isBulkEditModalOpen && taxonomies && (
         <BulkEditModal
-          taxonomies={taxonomies}
           onClose={() => setIsBulkEditModalOpen(false)}
           onSubmit={handleBulkUpdate}
           count={selectedIds.size}
@@ -290,7 +293,7 @@ export function CoursesList() {
   );
 }
 
-function BulkEditModal({ taxonomies, onClose, onSubmit, count }: any) {
+function BulkEditModal({ onClose, onSubmit, count }: any) {
   const [updates, setUpdates] = useState<Partial<Course>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -328,88 +331,8 @@ function BulkEditModal({ taxonomies, onClose, onSubmit, count }: any) {
               <option value="false">Draft</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              onChange={(e) => {
-                if (e.target.value === "") {
-                  const newUpdates = { ...updates };
-                  delete newUpdates.category_id;
-                  setUpdates(newUpdates);
-                } else {
-                  setUpdates({ ...updates, category_id: e.target.value });
-                }
-              }}
-            >
-              <option value="">-- No Change --</option>
-              {taxonomies.categories.map((t: TaxonomyItem) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Delivery Mode</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              onChange={(e) => {
-                if (e.target.value === "") {
-                  const newUpdates = { ...updates };
-                  delete newUpdates.delivery_mode_id;
-                  setUpdates(newUpdates);
-                } else {
-                  setUpdates({ ...updates, delivery_mode_id: e.target.value });
-                }
-              }}
-            >
-              <option value="">-- No Change --</option>
-              {taxonomies.delivery_modes.map((t: TaxonomyItem) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">City</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              onChange={(e) => {
-                if (e.target.value === "") {
-                  const newUpdates = { ...updates };
-                  delete newUpdates.city_id;
-                  setUpdates(newUpdates);
-                } else {
-                  setUpdates({ ...updates, city_id: e.target.value });
-                }
-              }}
-            >
-              <option value="">-- No Change --</option>
-              {taxonomies.cities.map((t: TaxonomyItem) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Association</label>
-            <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              onChange={(e) => {
-                if (e.target.value === "") {
-                  const newUpdates = { ...updates };
-                  delete newUpdates.association_id;
-                  setUpdates(newUpdates);
-                } else {
-                  setUpdates({ ...updates, association_id: e.target.value });
-                }
-              }}
-            >
-              <option value="">-- No Change --</option>
-              {taxonomies.associations.map((t: TaxonomyItem) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
 
-          <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+          <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
             <button
               type="submit"
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"

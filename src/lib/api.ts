@@ -18,6 +18,16 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+export interface CourseSchedule {
+  id?: string;
+  course_id?: string;
+  start_date: string;
+  end_date?: string | null;
+  location?: string | null;
+  method?: string | null;
+  status: 'open' | 'guaranteed' | 'filling_fast' | 'closed' | 'cancelled';
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -25,14 +35,29 @@ export interface Course {
   objectives: string;
   target_audience: string;
   is_published: boolean;
-  category_id: string | null;
-  city_id: string | null;
-  association_id: string | null;
-  delivery_mode_id: string | null;
-  categories?: TaxonomyItem | null;
-  cities?: TaxonomyItem | null;
-  associations?: TaxonomyItem | null;
-  delivery_modes?: TaxonomyItem | null;
+  cost: number | null;
+  duration: string | null;
+  categories?: TaxonomyItem[];
+  cities?: TaxonomyItem[];
+  associations?: TaxonomyItem[];
+  delivery_modes?: TaxonomyItem[];
+  course_schedules?: CourseSchedule[];
+  is_blended?: boolean;
+}
+
+export interface CourseFormPayload {
+  title: string;
+  description: string;
+  objectives: string;
+  target_audience: string;
+  is_published: boolean;
+  cost: number | null;
+  duration: string | null;
+  category_ids: string[];
+  city_ids: string[];
+  association_ids: string[];
+  delivery_mode_ids: string[];
+  schedules: CourseSchedule[];
 }
 
 export interface TaxonomyItem {
@@ -82,6 +107,16 @@ export const bulkUpdateCourses = async (ids: string[], updates: Partial<Course>)
   return response.data;
 };
 
+export const createCourse = async (payload: CourseFormPayload): Promise<Course> => {
+  const response = await api.post("/courses", payload);
+  return response.data.data;
+};
+
+export const updateCourse = async (id: string, payload: CourseFormPayload): Promise<Course> => {
+  const response = await api.put(`/courses/${id}`, payload);
+  return response.data.data;
+};
+
 export const getTaxonomies = async () => {
   const response = await api.get("/taxonomies");
   return response.data.data;
@@ -97,6 +132,17 @@ export const createEnrollment = (interestId: string) =>
 
 export const updateEnrollmentStatus = (id: string, status: string) =>
   api.patch(`/enrollments/${id}`, { status }).then(r => r.data.data);
+
+// --- Enquiries ---
+export const getEnquiries = async (params?: Record<string, unknown>) => {
+  const response = await api.get("/enquiries", { params });
+  return response.data;
+};
+
+export const updateEnquiryStatus = async (id: string, status: string) => {
+  const response = await api.patch(`/enquiries/${id}`, { status });
+  return response.data;
+};
 
 // --- Audit Logs ---
 export const getAuditLogs = async (
