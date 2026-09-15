@@ -25,4 +25,9 @@ export interface DashboardMetrics {
   certificates: {
     total: number;
   };
+  detailed: {
+    topCategories: { name: string; count: number }[];
+    mostDemanded: { title: string; count: number }[];
+    topCompletions: { title: string; achieved: number; in_progress: number }[];
+  };
 }
