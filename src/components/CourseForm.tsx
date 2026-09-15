@@ -9,6 +9,8 @@ export default function CourseForm() {
   const isEdit = Boolean(id);
 
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [objectives, setObjectives] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
@@ -39,6 +41,8 @@ export default function CourseForm() {
         .then((res) => {
           const course = res.data.data;
           setTitle(course.title);
+          setSlug(course.slug || "");
+          setSlugTouched(true);
           setDescription(course.description || "");
           setObjectives(course.objectives || "");
           setTargetAudience(course.target_audience || "");
@@ -78,6 +82,7 @@ export default function CourseForm() {
     e.preventDefault();
     const payload = {
       title,
+      slug: slug || undefined,
       description,
       objectives,
       target_audience: targetAudience,
@@ -134,8 +139,29 @@ export default function CourseForm() {
               required
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (!isEdit && !slugTouched) {
+                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                }
+              }}
               className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Slug (URL)
+            </label>
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => {
+                setSlug(e.target.value);
+                setSlugTouched(true);
+              }}
+              placeholder="Auto-generated if left blank"
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
             />
           </div>
 

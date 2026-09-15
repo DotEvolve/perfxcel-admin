@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCourses, getTaxonomies, bulkUpdateCourses } from "../lib/api";
 import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
@@ -25,9 +25,9 @@ export function CoursesList() {
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const getWebsiteUrl = (courseId: string) => {
+  const getWebsiteUrl = (course: Course) => {
     const appUrl = import.meta.env.VITE_APP_URL;
-    return `${appUrl}/courses/${courseId}`;
+    return `${appUrl}/courses/${course.slug || course.id}`;
   };
 
   // Taxonomies for filters and bulk edit
@@ -291,7 +291,7 @@ export function CoursesList() {
                               <button onClick={() => navigate(`/courses/${course.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-4">
                                 Edit
                               </button>
-                              <a href={getWebsiteUrl(course.id)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
+                              <a href={getWebsiteUrl(course)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
                                 View
                               </a>
                             </td>
