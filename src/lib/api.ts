@@ -32,6 +32,7 @@ export interface CourseSchedule {
 export interface Course {
   id: string;
   slug?: string;
+  short_code?: string;
   title: string;
   description: string;
   objectives: string;
@@ -39,6 +40,7 @@ export interface Course {
   is_published: boolean;
   cost: number | null;
   duration: string | null;
+  image_url?: string | null;
   categories?: TaxonomyItem[];
   cities?: TaxonomyItem[];
   associations?: TaxonomyItem[];
@@ -55,6 +57,7 @@ export interface CourseFormPayload {
   is_published: boolean;
   cost: number | null;
   duration: string | null;
+  image_url?: string | null;
   category_ids: string[];
   city_ids: string[];
   association_ids: string[];

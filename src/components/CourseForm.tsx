@@ -25,6 +25,10 @@ export default function CourseForm() {
 
   const [schedules, setSchedules] = useState<CourseSchedule[]>([]);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
     cities: TaxonomyItem[];
@@ -54,6 +58,7 @@ export default function CourseForm() {
           setAssociationIds(course.associations?.map((c: any) => c.id) || []);
           setDeliveryModeIds(course.delivery_modes?.map((c: any) => c.id) || []);
           setSchedules(course.course_schedules || []);
+          setImageUrl(course.image_url || null);
         })
         .catch(console.error);
     }
@@ -62,6 +67,26 @@ export default function CourseForm() {
   const handleSelectMultiple = (e: React.ChangeEvent<HTMLSelectElement>, setter: (val: string[]) => void) => {
     const options = Array.from(e.target.selectedOptions);
     setter(options.map(o => o.value));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.type !== "image/jpeg") {
+      setImageError("Only JPG images are allowed.");
+      return;
+    }
+    if (file.size > 1 * 1024 * 1024) {
+      setImageError("Image size must be less than 1MB.");
+      return;
+    }
+    
+    setImageError(null);
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setImageUrl(e.target?.result as string);
+    reader.readAsDataURL(file);
   };
 
   const addSchedule = () => {
@@ -97,15 +122,39 @@ export default function CourseForm() {
     };
 
     try {
+      let savedCourse;
       if (isEdit) {
-        await updateCourse(id as string, payload);
+        savedCourse = await updateCourse(id as string, payload);
       } else {
-        await createCourse(payload);
+        savedCourse = await createCourse(payload);
       }
+
+      if (imageFile && savedCourse.short_code) {
+        const { supabase } = await import("../lib/supabase");
+        const filename = `${savedCourse.short_code.toLowerCase()}.jpg`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("course-images")
+          .upload(filename, imageFile, { upsert: true, contentType: "image/jpeg" });
+          
+        if (uploadError) {
+          throw new Error("Image upload failed: " + uploadError.message);
+        }
+        
+        const { data: publicUrlData } = supabase.storage
+          .from("course-images")
+          .getPublicUrl(filename);
+          
+        // Re-update course with the image URL if it's the first time
+        if (savedCourse.image_url !== publicUrlData.publicUrl) {
+          await updateCourse(savedCourse.id, { ...payload, image_url: publicUrlData.publicUrl });
+        }
+      }
+
       navigate("/courses");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to save course");
+      alert("Failed to save course: " + (err.message || ""));
     }
   };
 
