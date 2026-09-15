@@ -9,15 +9,20 @@ export interface DashboardMetrics {
     delivery_modes: number;
   };
   interests: {
+    total: number;
     new: number;
     contacted: number;
     enrolled: number;
     rejected: number;
   };
   enrollments: {
+    total: number;
     pending: number;
     in_progress: number;
     achieved: number;
     dropped: number;
+  };
+  certificates: {
+    total: number;
   };
 }
