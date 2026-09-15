@@ -23,6 +23,12 @@ export function CoursesList() {
   // Selection for bulk edit
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const getWebsiteUrl = (courseId: string) => {
+    const appUrl = import.meta.env.VITE_APP_URL;
+    return `${appUrl}/courses/${courseId}`;
+  };
 
   // Taxonomies for filters and bulk edit
   const [taxonomies, setTaxonomies] = useState<{
@@ -225,6 +231,12 @@ export function CoursesList() {
                         Course
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Delivery Mode
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -241,36 +253,63 @@ export function CoursesList() {
                       </tr>
                     ) : (
                       courses.map((course) => (
-                        <tr key={course.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                              checked={selectedIds.has(course.id)}
-                              onChange={() => handleSelectOne(course.id)}
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <h4 className="text-sm font-medium text-gray-900">{course.title}</h4>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {[
-                                course.categories?.map(c => c.name).join(", "),
-                                course.delivery_modes?.map(c => c.name).join(", "),
-                                course.cities?.map(c => c.name).join(", ")
-                              ].filter(Boolean).join(" • ")}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                              {course.is_published ? "Published" : "Draft"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onClick={() => navigate(`/courses/${course.id}/edit`)} className="text-indigo-600 hover:text-indigo-900">
-                              Edit
-                            </button>
-                          </td>
-                        </tr>
+                        <React.Fragment key={course.id}>
+                          <tr className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                checked={selectedIds.has(course.id)}
+                                onChange={() => handleSelectOne(course.id)}
+                              />
+                            </td>
+                            <td className="px-6 py-4">
+                              <h4 className="text-sm font-medium text-gray-900">{course.title}</h4>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-500">
+                                {course.categories?.map(c => c.name).join(", ") || "-"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-500">
+                                {course.delivery_modes?.map(c => c.name).join(", ") || "-"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                                {course.is_published ? "Published" : "Draft"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button 
+                                onClick={() => setExpandedId(expandedId === course.id ? null : course.id)} 
+                                className="text-indigo-600 hover:text-indigo-900 mr-4"
+                              >
+                                {expandedId === course.id ? "Hide" : "Expand"}
+                              </button>
+                              <button onClick={() => navigate(`/courses/${course.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                Edit
+                              </button>
+                              <a href={getWebsiteUrl(course.id)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
+                                View
+                              </a>
+                            </td>
+                          </tr>
+                          {expandedId === course.id && (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                                <div className="text-sm text-gray-700">
+                                  <p><strong>Description:</strong> {course.description}</p>
+                                  <p className="mt-2"><strong>Cities:</strong> {course.cities?.map(c => c.name).join(", ") || "None"}</p>
+                                  <p className="mt-2"><strong>Associations:</strong> {course.associations?.map(c => c.name).join(", ") || "None"}</p>
+                                  <p className="mt-2"><strong>Cost:</strong> {course.cost ? `$${course.cost}` : "N/A"}</p>
+                                  <p className="mt-2"><strong>Duration:</strong> {course.duration || "N/A"}</p>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))
                     )}
                   </tbody>
