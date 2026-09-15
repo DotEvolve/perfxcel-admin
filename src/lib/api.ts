@@ -149,6 +149,26 @@ export const updateEnquiryStatus = async (id: string, status: string) => {
 export const getAuditLogs = async (
   filters?: AuditLogFilters
 ): Promise<AuditLogResponse> => {
-  const response = await api.get("/audit-logs", { params: filters });
-  return response.data;
+  const backendFilters = {
+    ...filters,
+    pageSize: filters?.limit,
+  };
+  const response = await api.get("/audit-logs", { params: backendFilters });
+  
+  const mappedData = response.data.data.map((log: any) => ({
+    id: log.id || `${log.tenant_id}-${log.timestamp}`,
+    action: log.action,
+    resource: log.entity_type,
+    resourceId: log.entity_id,
+    userId: log.actor_id,
+    userEmail: log.actor_id, // We fallback to actor_id if no email is attached to log
+    tenantId: log.tenant_id,
+    metadata: log.details,
+    createdAt: log.timestamp
+  }));
+  
+  return {
+    ...response.data,
+    data: mappedData
+  };
 };

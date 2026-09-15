@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
 import { getTaxonomies, api } from "../lib/api";
 import type { TaxonomyItem } from "../lib/api";
 
@@ -80,14 +81,17 @@ export default function Taxonomies() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-semibold">Taxonomies Management</h3>
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-1.5 min-w-[250px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <h3 className="text-2xl font-bold text-gray-900">Taxonomies Management</h3>
+        <div className="relative min-w-[250px]">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search taxonomies..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
       </div>
 
       {!data ? (
