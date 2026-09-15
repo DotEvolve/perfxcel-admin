@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { DashboardMetrics } from "../types/metrics";
+import type { AuditLogFilters, AuditLogResponse } from "../types/auditLog";
 import { supabase } from "./supabase";
 
 const API_BASE_URL =
@@ -96,3 +97,11 @@ export const createEnrollment = (interestId: string) =>
 
 export const updateEnrollmentStatus = (id: string, status: string) =>
   api.patch(`/enrollments/${id}`, { status }).then(r => r.data.data);
+
+// --- Audit Logs ---
+export const getAuditLogs = async (
+  filters?: AuditLogFilters
+): Promise<AuditLogResponse> => {
+  const response = await api.get("/audit-logs", { params: filters });
+  return response.data;
+};

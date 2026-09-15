@@ -9,6 +9,7 @@ import Enrollments from "./pages/Enrollments";
 import { CoursesList } from "./pages/CoursesList";
 import Dashboard from "./pages/Dashboard";
 import Taxonomies from "./pages/Taxonomies";
+import AuditLogs from "./pages/AuditLogs";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -53,6 +54,9 @@ function Layout() {
           </Link>
           <Link to="/enrollments" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
             Enrollments
+          </Link>
+          <Link to="/audit-logs" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+            Audit Logs
           </Link>
         </nav>
       </aside>
@@ -112,6 +116,7 @@ export default function App() {
         <Route path="/taxonomies" element={<Taxonomies />} />
         <Route path="/interests" element={<Interests />} />
         <Route path="/enrollments" element={<Enrollments />} />
+        <Route path="/audit-logs" element={<AuditLogs />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
