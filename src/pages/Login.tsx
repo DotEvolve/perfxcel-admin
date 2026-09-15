@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getMetrics } from "../lib/api";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -22,8 +23,16 @@ export function Login() {
       setError(error.message);
       setLoading(false);
     } else if (data.session) {
-      setLoading(false);
-      navigate("/");
+      try {
+        // Verify tenant membership by calling a protected endpoint
+        await getMetrics();
+        setLoading(false);
+        navigate("/");
+      } catch (err: any) {
+        await supabase.auth.signOut();
+        setError("Access restricted to PerfXcel tenant admins.");
+        setLoading(false);
+      }
     } else {
       setError("Please check your email to confirm your account.");
       setLoading(false);

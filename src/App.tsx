@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Routes, Route, Link, useNavigate, Navigate, Outlet } from "react-router-dom";
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
+import { getMetrics } from "./lib/api";
 import type { Session } from "@supabase/supabase-js";
 import { Login } from "./pages/Login";
 import Interests from "./pages/Interests";
@@ -87,8 +88,18 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        try {
+          await getMetrics();
+          setSession(session);
+        } catch (err) {
+          await supabase.auth.signOut();
+          setSession(null);
+        }
+      } else {
+        setSession(null);
+      }
       setLoading(false);
     });
 
