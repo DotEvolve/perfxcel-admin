@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getMetrics } from "../api";
+import { getMetrics } from "../lib/api";
 import type { DashboardMetrics } from "../types/metrics";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

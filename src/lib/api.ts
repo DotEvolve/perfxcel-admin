@@ -1,6 +1,6 @@
 import axios from "axios";
-import type { DashboardMetrics } from "./types/metrics";
-import { supabase } from "./lib/supabase";
+import type { DashboardMetrics } from "../types/metrics";
+import { supabase } from "./supabase";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api-dev.perfxcel.com/api/v1";

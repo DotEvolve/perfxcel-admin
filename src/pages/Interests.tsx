@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { getInterests, updateInterestStatus, createEnrollment, getCourses } from "../api";
-import type { PaginatedResponse } from "../api";
+import { getInterests, updateInterestStatus, createEnrollment, getCourses } from "../lib/api";
+import type { PaginatedResponse } from "../lib/api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
 import { Pagination } from "../components/Pagination";
 

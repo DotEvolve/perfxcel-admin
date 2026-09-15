@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCourses, getTaxonomies, bulkUpdateCourses } from "../api";
-import type { Course, TaxonomyItem, PaginatedResponse } from "../api";
+import { getCourses, getTaxonomies, bulkUpdateCourses } from "../lib/api";
+import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
 import { Pagination } from "../components/Pagination";
 
 export function CoursesList() {
