@@ -231,6 +231,9 @@ export function CoursesList() {
                         Course
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Code
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Category
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -247,7 +250,7 @@ export function CoursesList() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {courses.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-10 text-center text-gray-500">
+                        <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
                           No courses found.
                         </td>
                       </tr>
@@ -265,6 +268,9 @@ export function CoursesList() {
                             </td>
                             <td className="px-6 py-4">
                               <h4 className="text-sm font-medium text-gray-900">{course.title}</h4>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-500 font-mono">{course.short_code}</span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-sm text-gray-500">
