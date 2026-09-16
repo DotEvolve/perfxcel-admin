@@ -9,28 +9,28 @@ src/
 ├── __tests__/          # All tests (unit, integration, property-based)
 │   └── tenants/        # Tenant-specific tests
 ├── assets/             # Static assets
-├── components/         # Shared/reusable React components
+├── components/         # Shared/reusable React components, grouped by domain
 │   ├── templates/      # Template-specific components
 │   └── tenants/        # Tenant-specific components
-├── config/             # App configuration constants
-├── hooks/              # Custom React hooks (e.g. useTenantContext)
+├── config/             # App-wide configuration constants
+├── hooks/              # Custom React hooks (e.g. useTenantContext) — all data-fetching logic lives here
 ├── lib/
-│   ├── api.ts          # Axios instance — attaches Supabase JWT, used for general API Gateway calls
+│   ├── api.ts          # Axios instance — attaches Supabase JWT automatically; use for API Gateway calls
 │   ├── adminApi.ts     # Admin-specific API calls
 │   └── supabase.ts     # Supabase client singleton — never instantiate inline
 ├── middleware/         # Express middleware (used by server.js)
-├── pages/              # Route-level page components (one per route, kept thin)
+├── pages/              # Route-level page components — one per route, kept thin
 ├── types/              # Shared TypeScript interfaces and types
-├── utils/              # Pure utility functions (no side effects, no API calls)
+├── utils/              # Pure utility functions — no side effects, no API calls
 ├── App.tsx             # Root component — HashRouter, all route definitions, auth state
-├── main.tsx            # Entry point
+├── main.tsx            # App entry point
 └── vitest.setup.ts     # Global Vitest setup
 ```
 
 ## Routing
 
 - Uses `HashRouter` — all routes are hash-based (e.g. `/#/tenants`, `/#/templates`).
-- **All route definitions live exclusively in `App.tsx`.** Never define routes inside page or component files.
+- All route definitions live exclusively in `App.tsx`. Never define routes inside page or component files.
 - Public routes (e.g. `/login`) sit outside `AuthGuard`. All protected routes are wrapped in `AuthGuard`.
 - Auth state is managed in `App.tsx` via Supabase `onAuthStateChange`.
 
@@ -42,26 +42,26 @@ src/
 
 ## API Calls
 
-- **Never call `axios` directly in components or hooks.**
-- Use `src/lib/api.ts` for general API Gateway calls (attaches Supabase JWT automatically).
+- Never call `axios` directly in components or hooks.
+- Use `src/lib/api.ts` for API Gateway calls (Supabase JWT is attached automatically).
 - Use `src/lib/adminApi.ts` for admin-specific API calls.
 - The Supabase client singleton lives in `src/lib/supabase.ts` — never instantiate a new client inline.
 
 ## Hooks
 
-- Data-fetching and business logic belong in domain-scoped hooks in `src/hooks/`.
-- Components call hooks — never call `api.ts` or `adminApi.ts` directly from a component or page.
+- All data-fetching and business logic belong in domain-scoped hooks in `src/hooks/`.
+- Components and pages call hooks — never import `api.ts` or `adminApi.ts` directly from a component or page.
 
 ## Types
 
 - Shared TypeScript types live in `src/types/`. Use `interface` for object shapes.
-- Strict mode is enabled — no `any` without an explicit justification comment.
+- Strict mode is enabled — never use `any` without an explicit justification comment.
 
 ## Testing
 
 - All tests live in `src/__tests__/`. Use Vitest with jsdom and `@testing-library/react`.
-- Property-based tests use `fast-check` and the `.property.test.tsx` suffix.
-- `src/__tests__/infra-endpoint.test.ts` requires a live server — excluded from the default test run.
+- Property-based tests use `fast-check` and are named with the `.property.test.tsx` suffix. Run a minimum of 100 iterations per property.
+- `src/__tests__/infra-endpoint.test.ts` requires a live server — it is excluded from the default test run.
 
 ## Error Tracking
 
@@ -70,5 +70,5 @@ src/
 
 ## Styling
 
-- Tailwind CSS v4 via `@tailwindcss/vite` — **no `tailwind.config.js`**.
-- Apply utility classes directly in JSX. Never use inline `style` props for layout.
+- Tailwind CSS v4 via `@tailwindcss/vite` — there is no `tailwind.config.js`.
+- Apply utility classes directly in JSX. Never use inline `style` props for layout or spacing.
