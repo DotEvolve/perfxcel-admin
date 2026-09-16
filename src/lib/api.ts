@@ -68,6 +68,7 @@ export interface CourseFormPayload {
   schedules: CourseSchedule[];
   status?: 'active' | 'archived';
   is_public?: boolean;
+  short_code?: string;
 }
 
 export interface TaxonomyItem {

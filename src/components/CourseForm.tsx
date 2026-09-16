@@ -129,6 +129,7 @@ export default function CourseForm() {
       association_ids: associationIds,
       delivery_mode_ids: deliveryModeIds,
       schedules,
+      short_code: shortCode || undefined,
     };
 
     try {
@@ -193,14 +194,14 @@ export default function CourseForm() {
         className="bg-white shadow rounded-lg p-6 space-y-8">
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Basic Info</h4>
-          {isEdit && shortCode && (
+          {isEdit && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Code (read-only)
+                Course Code
               </label>
-              <input readOnly value={shortCode}
-                     className="w-full border border-gray-200 bg-gray-50 rounded-md p-2
-                                font-mono text-sm text-gray-500 cursor-not-allowed" />
+              <input value={shortCode}
+                     onChange={(e) => setShortCode(e.target.value)}
+                     className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
             </div>
           )}
           <div>
