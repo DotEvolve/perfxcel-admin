@@ -16,6 +16,7 @@ export default function CourseForm() {
   const [targetAudience, setTargetAudience] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
+  const [isBlended, setIsBlended] = useState(false);
   const [courseStatus, setCourseStatus] = useState<'active' | 'archived'>('active');
   const [shortCode, setShortCode] = useState("");
   const [cost, setCost] = useState<number | "">("");
@@ -56,6 +57,7 @@ export default function CourseForm() {
           setTargetAudience(course.target_audience || "");
           setIsPublished(course.is_published);
           setIsPublic(course.is_public || false);
+          setIsBlended(course.is_blended || false);
           setCourseStatus((course.status as 'active' | 'archived') || 'active');
           setShortCode(course.short_code || "");
           setCost(course.cost ?? "");
@@ -121,6 +123,7 @@ export default function CourseForm() {
       target_audience: targetAudience,
       is_published: isPublished,
       is_public: isPublic,
+      is_blended: isBlended,
       status: courseStatus,
       cost: cost === "" ? null : Number(cost),
       duration: duration || null,
@@ -194,16 +197,16 @@ export default function CourseForm() {
         className="bg-white shadow rounded-lg p-6 space-y-8">
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Basic Info</h4>
-          {isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Code
-              </label>
-              <input value={shortCode}
-                     onChange={(e) => setShortCode(e.target.value)}
-                     className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Code
+            </label>
+            <input value={shortCode}
+                   onChange={(e) => setShortCode(e.target.value)}
+                   placeholder="e.g. PX-LEAD-001"
+                   className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm" />
+            <p className="mt-1 text-xs text-gray-500">Used as the image filename in storage. Leave blank to auto-assign.</p>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title
@@ -405,6 +408,22 @@ export default function CourseForm() {
                 className="ml-2 block text-sm text-gray-900"
               >
                 Public (visible on homepage)
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_blended"
+                checked={isBlended}
+                onChange={(e) => setIsBlended(e.target.checked)}
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="is_blended"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Blended (online + in-person option)
               </label>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Link, useNavigate, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, Navigate, Outlet, useLocation } from "react-router-dom";
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
 import { getMetrics } from "./lib/api";
@@ -22,6 +22,24 @@ function AuthGuard({ children, session }: { children: React.ReactNode; session: 
 
 function Layout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const navLink = (to: string, label: string) => {
+    const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
+    return (
+      <Link
+        to={to}
+        className={`block px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+          isActive
+            ? "bg-indigo-50 text-indigo-700 font-semibold"
+            : "text-gray-700 hover:bg-gray-100"
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
@@ -41,28 +59,14 @@ function Layout() {
             PerfXcel Admin
           </h1>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link to="/" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Dashboard
-          </Link>
-          <Link to="/courses" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Courses
-          </Link>
-          <Link to="/taxonomies" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Taxonomies
-          </Link>
-          <Link to="/interests" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Interests
-          </Link>
-          <Link to="/enquiries" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Enquiries
-          </Link>
-          <Link to="/enrollments" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Enrollments
-          </Link>
-          <Link to="/audit-logs" className="block px-4 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
-            Audit Logs
-          </Link>
+        <nav className="flex-1 p-4 space-y-1">
+          {navLink("/", "Dashboard")}
+          {navLink("/courses", "Courses")}
+          {navLink("/taxonomies", "Taxonomies")}
+          {navLink("/interests", "Interests")}
+          {navLink("/enquiries", "Enquiries")}
+          {navLink("/enrollments", "Enrollments")}
+          {navLink("/audit-logs", "Audit Logs")}
         </nav>
       </aside>
 

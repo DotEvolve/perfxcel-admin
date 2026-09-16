@@ -303,6 +303,16 @@ export function CoursesList() {
                                   Archived
                                 </span>
                               )}
+                              {course.is_public && (
+                                <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  Public
+                                </span>
+                              )}
+                              {course.is_blended && (
+                                <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                  Blended
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <button 
@@ -328,13 +338,36 @@ export function CoursesList() {
                           </tr>
                           {expandedId === course.id && (
                             <tr>
-                              <td colSpan={6} className="px-6 py-4 bg-gray-50">
-                                <div className="text-sm text-gray-700">
-                                  <p><strong>Description:</strong> {course.description}</p>
-                                  <p className="mt-2"><strong>Cities:</strong> {course.cities?.map(c => c.name).join(", ") || "None"}</p>
-                                  <p className="mt-2"><strong>Associations:</strong> {course.associations?.map(c => c.name).join(", ") || "None"}</p>
-                                  <p className="mt-2"><strong>Cost:</strong> {course.cost ? `$${course.cost}` : "N/A"}</p>
-                                  <p className="mt-2"><strong>Duration:</strong> {course.duration || "N/A"}</p>
+                              <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                                <div className="flex gap-6">
+                                  {/* Thumbnail */}
+                                  {course.image_url ? (
+                                    <div className="w-32 h-24 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 bg-gray-100">
+                                      <img
+                                        src={course.image_url}
+                                        alt={course.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-32 h-24 flex-shrink-0 rounded-md border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-xs text-gray-400">
+                                      No image
+                                    </div>
+                                  )}
+                                  {/* Details */}
+                                  <div className="text-sm text-gray-700 flex-1 space-y-2">
+                                    <p><strong>Description:</strong> {course.description || "—"}</p>
+                                    <p><strong>Objectives:</strong> {course.objectives || "—"}</p>
+                                    <p><strong>Target Audience:</strong> {course.target_audience || "—"}</p>
+                                    <p><strong>Cities:</strong> {course.cities?.map(c => c.name).join(", ") || "None"}</p>
+                                    <p><strong>Associations:</strong> {course.associations?.map(c => c.name).join(", ") || "None"}</p>
+                                    <div className="flex gap-6">
+                                      <p><strong>Cost:</strong> {course.cost != null ? `$${course.cost}` : "N/A"}</p>
+                                      <p><strong>Duration:</strong> {course.duration || "N/A"}</p>
+                                      <p><strong>Public:</strong> {course.is_public ? "✅ Yes" : "No"}</p>
+                                      <p><strong>Blended:</strong> {course.is_blended ? "✅ Yes" : "No"}</p>
+                                    </div>
+                                  </div>
                                 </div>
                               </td>
                             </tr>
