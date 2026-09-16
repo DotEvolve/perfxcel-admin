@@ -47,6 +47,9 @@ export interface Course {
   delivery_modes?: TaxonomyItem[];
   course_schedules?: CourseSchedule[];
   is_blended?: boolean;
+  status?: 'active' | 'archived' | 'deleted';
+  is_public?: boolean;
+  deleted_at?: string | null;
 }
 
 export interface CourseFormPayload {
@@ -63,6 +66,8 @@ export interface CourseFormPayload {
   association_ids: string[];
   delivery_mode_ids: string[];
   schedules: CourseSchedule[];
+  status?: 'active' | 'archived';
+  is_public?: boolean;
 }
 
 export interface TaxonomyItem {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCourses, getTaxonomies, bulkUpdateCourses } from "../lib/api";
+import { Trash2 } from "lucide-react";
+import { getCourses, getTaxonomies, bulkUpdateCourses, deleteCourse } from "../lib/api";
 import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
 import Pagination from "../components/Pagination";
 
@@ -91,6 +92,17 @@ export function CoursesList() {
     } catch (err) {
       console.error(err);
       alert("Failed to bulk update courses");
+    }
+  };
+
+  const handleDelete = async (course: Course) => {
+    if (!window.confirm(`Delete "${course.title}"? It will be permanently removed after 60 days.`)) return;
+    try {
+      await deleteCourse(course.id);
+      fetchCourses();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete course.");
     }
   };
 
@@ -286,6 +298,11 @@ export function CoursesList() {
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                                 {course.is_published ? "Published" : "Draft"}
                               </span>
+                              {course.status === 'archived' && (
+                                <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                  Archived
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <button 
@@ -297,9 +314,16 @@ export function CoursesList() {
                               <button onClick={() => navigate(`/courses/${course.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-4">
                                 Edit
                               </button>
-                              <a href={getWebsiteUrl(course)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
+                              <a href={getWebsiteUrl(course)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900 mr-4">
                                 View
                               </a>
+                              <button
+                                onClick={() => handleDelete(course)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete course"
+                              >
+                                <Trash2 className="w-4 h-4 inline" />
+                              </button>
                             </td>
                           </tr>
                           {expandedId === course.id && (
@@ -358,7 +382,7 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
         </div>
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-gray-700">Publish Status</label>
             <select
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               onChange={(e) => {
@@ -374,6 +398,26 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
               <option value="">-- No Change --</option>
               <option value="true">Published</option>
               <option value="false">Draft</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Lifecycle Status</label>
+            <select
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              onChange={(e) => {
+                if (e.target.value === "") {
+                  const newUpdates = { ...updates };
+                  delete newUpdates.status;
+                  setUpdates(newUpdates);
+                } else {
+                  setUpdates({ ...updates, status: e.target.value as 'active' | 'archived' | 'deleted' });
+                }
+              }}
+            >
+              <option value="">-- No Change --</option>
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 

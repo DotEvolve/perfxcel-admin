@@ -15,6 +15,9 @@ export default function CourseForm() {
   const [objectives, setObjectives] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [courseStatus, setCourseStatus] = useState<'active' | 'archived'>('active');
+  const [shortCode, setShortCode] = useState("");
   const [cost, setCost] = useState<number | "">("");
   const [duration, setDuration] = useState("");
 
@@ -28,6 +31,7 @@ export default function CourseForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
 
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
@@ -51,6 +55,9 @@ export default function CourseForm() {
           setObjectives(course.objectives || "");
           setTargetAudience(course.target_audience || "");
           setIsPublished(course.is_published);
+          setIsPublic(course.is_public || false);
+          setCourseStatus((course.status as 'active' | 'archived') || 'active');
+          setShortCode(course.short_code || "");
           setCost(course.cost ?? "");
           setDuration(course.duration || "");
           setCategoryIds(course.categories?.map((c: any) => c.id) || []);
@@ -105,6 +112,7 @@ export default function CourseForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setImageUploadError(null);
     const payload = {
       title,
       slug: slug || undefined,
@@ -112,6 +120,8 @@ export default function CourseForm() {
       objectives,
       target_audience: targetAudience,
       is_published: isPublished,
+      is_public: isPublic,
+      status: courseStatus,
       cost: cost === "" ? null : Number(cost),
       duration: duration || null,
       category_ids: categoryIds,
@@ -154,7 +164,11 @@ export default function CourseForm() {
       navigate("/courses");
     } catch (err: any) {
       console.error(err);
-      alert("Failed to save course: " + (err.message || ""));
+      if (err.message && err.message.includes("Image upload failed")) {
+        setImageUploadError("Image upload failed: " + err.message);
+      } else {
+        alert("Failed to save course: " + (err.message || ""));
+      }
     }
   };
 
@@ -176,10 +190,19 @@ export default function CourseForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow rounded-lg p-6 space-y-8"
-      >
+        className="bg-white shadow rounded-lg p-6 space-y-8">
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Basic Info</h4>
+          {isEdit && shortCode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Course Code (read-only)
+              </label>
+              <input readOnly value={shortCode}
+                     className="w-full border border-gray-200 bg-gray-50 rounded-md p-2
+                                font-mono text-sm text-gray-500 cursor-not-allowed" />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title
@@ -228,6 +251,9 @@ export default function CourseForm() {
                 <p className="mt-1 text-xs text-gray-500">Only JPG format. Max size 1MB.</p>
                 {imageError && (
                   <p className="mt-1 text-sm text-red-600">{imageError}</p>
+                )}
+                {imageUploadError && (
+                  <p className="mt-1 text-sm text-red-600">{imageUploadError}</p>
                 )}
               </div>
               {imageUrl && (
@@ -347,20 +373,56 @@ export default function CourseForm() {
           )}
         </section>
 
-        <div className="flex items-center pt-4 border-t">
-          <input
-            type="checkbox"
-            id="published"
-            checked={isPublished}
-            onChange={(e) => setIsPublished(e.target.checked)}
-            className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-          />
-          <label
-            htmlFor="published"
-            className="ml-2 block text-sm text-gray-900"
-          >
-            Published
-          </label>
+        <div className="flex flex-col space-y-4 pt-4 border-t">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="published"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.target.checked)}
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="published"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Published
+              </label>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_public"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="is_public"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Public (visible on homepage)
+              </label>
+            </div>
+          </div>
+
+          {isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Course Status
+              </label>
+              <select
+                value={courseStatus}
+                onChange={e => setCourseStatus(e.target.value as 'active' | 'archived')}
+                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="active">Active</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end">
