@@ -145,13 +145,27 @@ export const updateEnrollmentStatus = (id: string, status: string) =>
   api.patch(`/enrollments/${id}`, { status }).then(r => r.data.data);
 
 // --- Enquiries ---
-export const getEnquiries = async (params?: Record<string, unknown>) => {
+export const getEnquiries = async (params: {
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}) => {
   const response = await api.get("/enquiries", { params });
   return response.data;
 };
 
 export const updateEnquiryStatus = async (id: string, status: string) => {
   const response = await api.patch(`/enquiries/${id}`, { status });
+  return response.data.data;
+};
+
+export const getTrainingPlanRequests = async (params: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const response = await api.get("/training-plan", { params });
   return response.data;
 };
 

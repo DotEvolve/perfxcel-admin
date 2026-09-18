@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Taxonomies from "./pages/Taxonomies";
 import AuditLogs from "./pages/AuditLogs";
 import Enquiries from "./pages/Enquiries";
+import TrainingPlanRequests from "./pages/TrainingPlanRequests";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -64,6 +65,7 @@ function Layout() {
           {navLink("/courses", "Courses")}
           {navLink("/taxonomies", "Taxonomies")}
           {navLink("/interests", "Interests")}
+          {navLink("/training-plans", "Training Plans")}
           {navLink("/enquiries", "Enquiries")}
           {navLink("/enrollments", "Enrollments")}
           {navLink("/audit-logs", "Audit Logs")}
@@ -134,6 +136,7 @@ export default function App() {
         <Route path="/courses/:id/edit" element={<CourseForm />} />
         <Route path="/taxonomies" element={<Taxonomies />} />
         <Route path="/interests" element={<Interests />} />
+        <Route path="/training-plans" element={<TrainingPlanRequests />} />
         <Route path="/enquiries" element={<Enquiries />} />
         <Route path="/enrollments" element={<Enrollments />} />
         <Route path="/audit-logs" element={<AuditLogs />} />
