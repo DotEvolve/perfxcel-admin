@@ -217,7 +217,7 @@ export const getAuditLogs = async (
     resource: log.entity_type,
     resourceId: log.entity_id,
     userId: log.actor_id,
-    userEmail: log.actor_id, // We fallback to actor_id if no email is attached to log
+    userEmail: log.actor_email || log.actor_id, // We fallback to actor_id if no email is attached to log
     tenantId: log.tenant_id,
     metadata: log.details,
     createdAt: log.timestamp,
