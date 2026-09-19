@@ -162,8 +162,8 @@ Migrate `cos-api-gateway`, `cos-workflow-service`, and `ff-api` from Heroku to a
   - _Requirements: 10.1_
 
 - [x] 19. Update environment variables in Vercel for `dot-portal-api`
-  - Set production env vars: `DOT_COS_BASE_DOMAIN=govnix.net`, `FOOT_FACTORY_BASE_DOMAIN=floorix.net`, `DOT_COS_CORS_ENDPOINT=https://api.govnix.net/api/v1/internal/cors-origins`, `FOOT_FACTORY_CORS_ENDPOINT=https://api.floorix.net/api/v1/internal/cors-origins`
-  - Set dev env vars: `DOT_COS_CORS_ENDPOINT=https://api-dev.govnix.net/api/v1/internal/cors-origins`, `FOOT_FACTORY_CORS_ENDPOINT=https://api-dev.floorix.net/api/v1/internal/cors-origins`
+  - Set production env vars: `DOT_COS_BASE_DOMAIN=govnix.net`, `FLOORIX_BASE_DOMAIN=floorix.net`, `DOT_COS_CORS_ENDPOINT=https://api.govnix.net/api/v1/internal/cors-origins`, `FLOORIX_CORS_ENDPOINT=https://api.floorix.net/api/v1/internal/cors-origins`
+  - Set dev env vars: `DOT_COS_CORS_ENDPOINT=https://api-dev.govnix.net/api/v1/internal/cors-origins`, `FLOORIX_CORS_ENDPOINT=https://api-dev.floorix.net/api/v1/internal/cors-origins`
   - Update `dot-portal-api`'s `.env.example` to reflect the new domain values for all four variables
   - _Requirements: 10.2, 10.3, 10.6_
 

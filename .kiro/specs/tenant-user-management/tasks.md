@@ -80,7 +80,7 @@ Each group is self-contained and can be reviewed independently. All property tes
 
 - [x] 4. Create `src/utils/floorixWebhook.ts`
   - Export `async function notifyFloorix(userId: string, email: string, tenantId: string): Promise<void>`
-  - POST to `${process.env.FOOT_FACTORY_API_URL}/api/v1/webhooks/user-provisioned` using native `fetch`
+  - POST to `${process.env.FLOORIX_API_URL}/api/v1/webhooks/user-provisioned` using native `fetch`
   - Include header `x-service-webhook-secret: process.env.SERVICE_WEBHOOK_SECRET`
   - Body: `JSON.stringify({ userId, email, tenantId })`
   - Wrap entire call in `try/catch`; on any error call `console.error` and return — never re-throw

@@ -118,7 +118,7 @@ export async function notifyFloorix(
 ): Promise<void>;
 ```
 
-- POSTs to `${process.env.FOOT_FACTORY_API_URL}/api/v1/webhooks/user-provisioned`
+- POSTs to `${process.env.FLOORIX_API_URL}/api/v1/webhooks/user-provisioned`
 - Attaches `x-service-webhook-secret: process.env.SERVICE_WEBHOOK_SECRET`
 - Fire-and-forget: wraps the call in `try/catch`, logs errors via `console.error`, never re-throws
 - Uses the native `fetch` API (Node 18+) — no new dependency needed

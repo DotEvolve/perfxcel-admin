@@ -23,18 +23,18 @@ App-specific admin dashboards (`govnix-admin`, `floorix-admin`) must **not** dup
 ## Glossary
 
 - **Portal_API**: The dot-portal-api service — central registry for tenants, app assignments, user roles, and billing. Base URL: `https://portal-api.dotevolve.net`.
-- **Foot_Factory_API**: The floorix-api service — Node.js/Express app backed by MongoDB. Manages floorix domain objects and user profile docs.
-- **Foot_Factory_Admin**: The floorix-admin React application — app-specific super-admin UI for floorix.
+- **Floorix_API**: The floorix-api service — Node.js/Express app backed by MongoDB. Manages floorix domain objects and user profile docs.
+- **Floorix_Admin**: The floorix-admin React application — app-specific super-admin UI for floorix.
 - **Cos_Admin_Dashboard**: The govnix-admin React application at `https://admin.govnix.net`.
 - **Dot_Admin**: The dot-admin React application — the centralized super-admin UI for dot-portal-api. The single place to manage users across all apps.
 - **Super_Admin**: An authenticated DotEvolve operator (role: `super-admin`).
 - **Tenant**: A SaaS client organisation identified by a UUID in dot-portal-api.
-- **Profile_Doc**: A MongoDB User document in Foot_Factory_API that stores floorix–specific profile data for a Supabase user. Fields: `supabaseId`, `email`, `name`, `username`, `tenantId`.
+- **Profile_Doc**: A MongoDB User document in Floorix_API that stores floorix–specific profile data for a Supabase user. Fields: `supabaseId`, `email`, `name`, `username`, `tenantId`.
 - **Tenant_Role_Record**: A row in the Supabase `user_tenant_roles` table: `(user_id, tenant_id, app_slug, role)`.
 - **Webhook_Secret**: A shared service secret stored in the `SERVICE_WEBHOOK_SECRET` environment variable, used to authenticate server-to-server webhook calls. Sent as the `x-service-webhook-secret` request header.
-- **Foot_Factory_Webhook_Endpoint**: The new `POST /api/v1/webhooks/user-provisioned` endpoint in Foot_Factory_API that creates a Profile_Doc proactively.
+- **Floorix_Webhook_Endpoint**: The new `POST /api/v1/webhooks/user-provisioned` endpoint in Floorix_API that creates a Profile_Doc proactively.
 - **Portal_User_API**: The set of user management endpoints on Portal_API: list, invite, grant, revoke, update-role, remove.
-- **TenantUsersTab**: The new "Users" tab component rendered inside the Tenants page of Foot_Factory_Admin.
+- **TenantUsersTab**: The new "Users" tab component rendered inside the Tenants page of Floorix_Admin.
 - **UserSummarySection**: The read-only user count sub-section rendered inside the expanded tenant row in Cos_Admin_Dashboard.
 - **App_Slug**: The string identifier for an application in the platform. The floorix app slug is `"floorix"`. The govnix app slug is `"govnix"`.
 - **apiClient**: The Axios instance in `floorix-admin/src/lib/axios.ts` that attaches the Supabase JWT and handles token refresh.
@@ -48,49 +48,49 @@ App-specific admin dashboards (`govnix-admin`, `floorix-admin`) must **not** dup
 
 ### Requirement 1: Foot-Factory-API — Webhook Endpoint for Proactive Profile Sync
 
-**User Story:** As a platform operator, I want Foot_Factory_API to expose a webhook endpoint that Portal_API can call after granting a user access to the floorix app, so that the user's Profile_Doc exists in MongoDB before they log in for the first time.
+**User Story:** As a platform operator, I want Floorix_API to expose a webhook endpoint that Portal_API can call after granting a user access to the floorix app, so that the user's Profile_Doc exists in MongoDB before they log in for the first time.
 
 #### Acceptance Criteria
 
-1. THE Foot_Factory_API SHALL expose a `POST /api/v1/webhooks/user-provisioned` endpoint (the Foot_Factory_Webhook_Endpoint).
-2. WHEN a request arrives at the Foot_Factory_Webhook_Endpoint, THE Foot_Factory_API SHALL validate that the `x-service-webhook-secret` request header matches the `SERVICE_WEBHOOK_SECRET` environment variable.
-3. IF the `x-service-webhook-secret` header is absent or does not match `SERVICE_WEBHOOK_SECRET`, THEN THE Foot_Factory_Webhook_Endpoint SHALL return HTTP 401 and SHALL NOT create or modify any Profile_Doc.
-4. WHEN the Foot_Factory_Webhook_Endpoint receives a valid authenticated request, THE Foot_Factory_API SHALL expect a JSON body containing `userId` (Supabase UUID string), `email` (string), and `tenantId` (string).
-5. IF the request body is missing `userId`, `email`, or `tenantId`, THEN THE Foot_Factory_Webhook_Endpoint SHALL return HTTP 400 with a descriptive error message and SHALL NOT create any Profile_Doc.
-6. WHEN the Foot_Factory_Webhook_Endpoint receives a valid payload for a `userId` that does not yet have a Profile_Doc, THE Foot_Factory_API SHALL create a Profile_Doc with `supabaseId` set to `userId`, `email` set to the provided email, `name` set to the provided email, `username` set to the provided email (lowercased), and `tenantId` set to the provided tenantId.
-7. WHEN the Foot_Factory_Webhook_Endpoint receives a valid payload for a `userId` that already has a Profile_Doc, THE Foot_Factory_API SHALL return HTTP 200 with `{ "status": "ok", "message": "already exists" }` and SHALL NOT modify the existing Profile_Doc.
-8. WHEN a Profile_Doc is successfully created by the Foot_Factory_Webhook_Endpoint, THE Foot_Factory_API SHALL return HTTP 201 with `{ "status": "ok" }`.
-9. THE Foot_Factory_Webhook_Endpoint SHALL be registered in `webhookRoutes.js` alongside the existing `supabase-user-created` route, following the same authentication pattern.
+1. THE Floorix_API SHALL expose a `POST /api/v1/webhooks/user-provisioned` endpoint (the Floorix_Webhook_Endpoint).
+2. WHEN a request arrives at the Floorix_Webhook_Endpoint, THE Floorix_API SHALL validate that the `x-service-webhook-secret` request header matches the `SERVICE_WEBHOOK_SECRET` environment variable.
+3. IF the `x-service-webhook-secret` header is absent or does not match `SERVICE_WEBHOOK_SECRET`, THEN THE Floorix_Webhook_Endpoint SHALL return HTTP 401 and SHALL NOT create or modify any Profile_Doc.
+4. WHEN the Floorix_Webhook_Endpoint receives a valid authenticated request, THE Floorix_API SHALL expect a JSON body containing `userId` (Supabase UUID string), `email` (string), and `tenantId` (string).
+5. IF the request body is missing `userId`, `email`, or `tenantId`, THEN THE Floorix_Webhook_Endpoint SHALL return HTTP 400 with a descriptive error message and SHALL NOT create any Profile_Doc.
+6. WHEN the Floorix_Webhook_Endpoint receives a valid payload for a `userId` that does not yet have a Profile_Doc, THE Floorix_API SHALL create a Profile_Doc with `supabaseId` set to `userId`, `email` set to the provided email, `name` set to the provided email, `username` set to the provided email (lowercased), and `tenantId` set to the provided tenantId.
+7. WHEN the Floorix_Webhook_Endpoint receives a valid payload for a `userId` that already has a Profile_Doc, THE Floorix_API SHALL return HTTP 200 with `{ "status": "ok", "message": "already exists" }` and SHALL NOT modify the existing Profile_Doc.
+8. WHEN a Profile_Doc is successfully created by the Floorix_Webhook_Endpoint, THE Floorix_API SHALL return HTTP 201 with `{ "status": "ok" }`.
+9. THE Floorix_Webhook_Endpoint SHALL be registered in `webhookRoutes.js` alongside the existing `supabase-user-created` route, following the same authentication pattern.
 
 #### Correctness Properties
 
-- **Idempotency**: FOR ALL valid webhook payloads `p`, calling the Foot_Factory_Webhook_Endpoint with `p` twice SHALL produce the same Profile_Doc state as calling it once. The second call SHALL return HTTP 200 `"already exists"` and the Profile_Doc count for `p.userId` SHALL equal 1.
-- **Error conditions**: FOR ALL payloads missing one or more of `userId`, `email`, `tenantId`, THE Foot_Factory_Webhook_Endpoint SHALL return HTTP 400 and the Profile_Doc collection SHALL be unchanged.
+- **Idempotency**: FOR ALL valid webhook payloads `p`, calling the Floorix_Webhook_Endpoint with `p` twice SHALL produce the same Profile_Doc state as calling it once. The second call SHALL return HTTP 200 `"already exists"` and the Profile_Doc count for `p.userId` SHALL equal 1.
+- **Error conditions**: FOR ALL payloads missing one or more of `userId`, `email`, `tenantId`, THE Floorix_Webhook_Endpoint SHALL return HTTP 400 and the Profile_Doc collection SHALL be unchanged.
 
 ---
 
 ### Requirement 2: Portal-API — Call Foot-Factory Webhook After User Provisioning
 
-**User Story:** As a platform operator, I want Portal_API to notify Foot_Factory_API whenever a user is granted access to the floorix app, so that the Profile_Doc is created proactively without relying on lazy creation at first login.
+**User Story:** As a platform operator, I want Portal_API to notify Floorix_API whenever a user is granted access to the floorix app, so that the Profile_Doc is created proactively without relying on lazy creation at first login.
 
 #### Acceptance Criteria
 
-1. WHEN Portal_API successfully executes `inviteUser` and the `apps` array in the request body contains `"floorix"`, THE Portal_API SHALL send a POST request to the Foot_Factory_Webhook_Endpoint with the invited user's Supabase `userId`, `email`, and `tenantId`.
-2. WHEN Portal_API successfully executes `grantAppAccess` and the `appSlug` in the request body equals `"floorix"`, THE Portal_API SHALL send a POST request to the Foot_Factory_Webhook_Endpoint with the target user's Supabase `userId`, `email`, and `tenantId`.
-3. THE Portal_API SHALL include the `x-service-webhook-secret` header (value from `SERVICE_WEBHOOK_SECRET` environment variable) on all requests to the Foot_Factory_Webhook_Endpoint.
-4. IF the Foot_Factory_Webhook_Endpoint returns an error response or is unreachable, THEN THE Portal_API SHALL log the error but SHALL NOT fail the original `inviteUser` or `grantAppAccess` response — the user's Tenant_Role_Record has already been created and the invite email has been sent.
-5. THE Portal_API SHALL resolve the Foot_Factory_API base URL from the `FOOT_FACTORY_API_URL` environment variable.
-6. WHEN Portal_API executes `inviteUser` or `grantAppAccess` for an `app_slug` other than `"floorix"`, THE Portal_API SHALL NOT send any request to the Foot_Factory_Webhook_Endpoint.
+1. WHEN Portal_API successfully executes `inviteUser` and the `apps` array in the request body contains `"floorix"`, THE Portal_API SHALL send a POST request to the Floorix_Webhook_Endpoint with the invited user's Supabase `userId`, `email`, and `tenantId`.
+2. WHEN Portal_API successfully executes `grantAppAccess` and the `appSlug` in the request body equals `"floorix"`, THE Portal_API SHALL send a POST request to the Floorix_Webhook_Endpoint with the target user's Supabase `userId`, `email`, and `tenantId`.
+3. THE Portal_API SHALL include the `x-service-webhook-secret` header (value from `SERVICE_WEBHOOK_SECRET` environment variable) on all requests to the Floorix_Webhook_Endpoint.
+4. IF the Floorix_Webhook_Endpoint returns an error response or is unreachable, THEN THE Portal_API SHALL log the error but SHALL NOT fail the original `inviteUser` or `grantAppAccess` response — the user's Tenant_Role_Record has already been created and the invite email has been sent.
+5. THE Portal_API SHALL resolve the Floorix_API base URL from the `FLOORIX_API_URL` environment variable.
+6. WHEN Portal_API executes `inviteUser` or `grantAppAccess` for an `app_slug` other than `"floorix"`, THE Portal_API SHALL NOT send any request to the Floorix_Webhook_Endpoint.
 
 ---
 
 ### Requirement 3: Foot-Factory-Admin — Users Tab in Tenants Page
 
-**User Story:** As a Super_Admin using Foot_Factory_Admin, I want to see and manage the users who have floorix access for a selected tenant, so that I can audit and control access without switching to Dot_Admin.
+**User Story:** As a Super_Admin using Floorix_Admin, I want to see and manage the users who have floorix access for a selected tenant, so that I can audit and control access without switching to Dot_Admin.
 
 #### Acceptance Criteria
 
-1. THE Foot_Factory_Admin Tenants page SHALL display a "Users" tab alongside the existing tenant configuration options for the selected tenant.
+1. THE Floorix_Admin Tenants page SHALL display a "Users" tab alongside the existing tenant configuration options for the selected tenant.
 2. WHEN the Super_Admin selects the "Users" tab for a tenant, THE TenantUsersTab SHALL fetch the user list by calling `GET /api/v1/tenants/:tenantId/users` on Portal_API via `portalApiClient`.
 3. WHILE the user list is loading, THE TenantUsersTab SHALL display a loading spinner.
 4. WHEN the user list loads successfully, THE TenantUsersTab SHALL display only users who have at least one Tenant_Role_Record with `app_slug = "floorix"` for the selected tenant.
@@ -119,11 +119,11 @@ App-specific admin dashboards (`govnix-admin`, `floorix-admin`) must **not** dup
 
 ### Requirement 4: Foot-Factory-Admin — Portal API Client
 
-**User Story:** As a developer, I want a dedicated Axios instance in Foot_Factory_Admin that points to Portal_API, so that user management calls are cleanly separated from floorix-api calls and the correct base URL and auth headers are used.
+**User Story:** As a developer, I want a dedicated Axios instance in Floorix_Admin that points to Portal_API, so that user management calls are cleanly separated from floorix-api calls and the correct base URL and auth headers are used.
 
 #### Acceptance Criteria
 
-1. THE Foot_Factory_Admin SHALL provide a `portalApiClient` Axios instance in `src/lib/portalApi.ts` with `baseURL` set from the `VITE_PORTAL_API_URL` environment variable, falling back to `"https://portal-api.dotevolve.net"`.
+1. THE Floorix_Admin SHALL provide a `portalApiClient` Axios instance in `src/lib/portalApi.ts` with `baseURL` set from the `VITE_PORTAL_API_URL` environment variable, falling back to `"https://portal-api.dotevolve.net"`.
 2. THE `portalApiClient` SHALL attach the Supabase JWT from `localStorage.getItem("auth_token")` as a `Bearer` token on every request, using the same interceptor pattern as `apiClient`.
 3. THE `portalApiClient` SHALL handle 401 responses by attempting a token refresh via `apiClient`'s `/auth/refresh` endpoint, then retrying the original request with the new token.
 4. IF the token refresh fails, THEN THE `portalApiClient` SHALL redirect the user to `/login`, consistent with the behaviour of `apiClient`.
@@ -159,9 +159,9 @@ App-specific admin dashboards (`govnix-admin`, `floorix-admin`) must **not** dup
 
 #### Acceptance Criteria
 
-1. THE Foot_Factory_Webhook_Endpoint SHALL reject all requests that do not include the correct `x-service-webhook-secret` header value with HTTP 401.
-2. THE Portal_API SHALL authenticate all calls to the Foot_Factory_Webhook_Endpoint using the `x-service-webhook-secret` header.
-3. THE `portalApiClient` in Foot_Factory_Admin SHALL attach a valid Supabase JWT on every request to Portal_API.
+1. THE Floorix_Webhook_Endpoint SHALL reject all requests that do not include the correct `x-service-webhook-secret` header value with HTTP 401.
+2. THE Portal_API SHALL authenticate all calls to the Floorix_Webhook_Endpoint using the `x-service-webhook-secret` header.
+3. THE `portalApiClient` in Floorix_Admin SHALL attach a valid Supabase JWT on every request to Portal_API.
 4. IF Portal_API returns HTTP 401 or 403 to any request from TenantUsersTab, THEN THE TenantUsersTab SHALL display an inline error message indicating that the action is not authorised.
 5. IF Portal_API returns HTTP 401 or 403 to any request from UserSummarySection, THEN THE UserSummarySection SHALL display an inline error message indicating that the action is not authorised.
 6. THE Portal_User_API endpoints SHALL enforce role-based access: Super_Admin may manage users for any tenant; a `tenant-admin` may only manage users for their own tenant and only for apps they themselves have access to (scoped delegation).

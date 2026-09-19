@@ -176,11 +176,11 @@ The three backend services currently on Heroku — `cos-api-gateway`, `cos-workf
 #### Acceptance Criteria
 
 1. THE `cos-frontend` Vercel environment SHALL have `VITE_API_GATEWAY_URL` set to `https://api.govnix.net` for the production branch and `https://api-dev.govnix.net` for the dev branch.
-2. THE `dot-portal-api` Vercel environment SHALL have `DOT_COS_BASE_DOMAIN` set to `govnix.net`, `FOOT_FACTORY_BASE_DOMAIN` set to `floorix.net`, `DOT_COS_CORS_ENDPOINT` set to `https://api.govnix.net/api/v1/internal/cors-origins`, and `FOOT_FACTORY_CORS_ENDPOINT` set to `https://api.floorix.net/api/v1/internal/cors-origins` for the production environment.
-3. THE `dot-portal-api` Vercel environment SHALL have `DOT_COS_CORS_ENDPOINT` set to `https://api-dev.govnix.net/api/v1/internal/cors-origins` and `FOOT_FACTORY_CORS_ENDPOINT` set to `https://api-dev.floorix.net/api/v1/internal/cors-origins` for the dev environment.
+2. THE `dot-portal-api` Vercel environment SHALL have `DOT_COS_BASE_DOMAIN` set to `govnix.net`, `FLOORIX_BASE_DOMAIN` set to `floorix.net`, `DOT_COS_CORS_ENDPOINT` set to `https://api.govnix.net/api/v1/internal/cors-origins`, and `FLOORIX_CORS_ENDPOINT` set to `https://api.floorix.net/api/v1/internal/cors-origins` for the production environment.
+3. THE `dot-portal-api` Vercel environment SHALL have `DOT_COS_CORS_ENDPOINT` set to `https://api-dev.govnix.net/api/v1/internal/cors-origins` and `FLOORIX_CORS_ENDPOINT` set to `https://api-dev.floorix.net/api/v1/internal/cors-origins` for the dev environment.
 4. THE `.env.prod` file on the OCI_Instance SHALL contain all production secrets and connection strings required by `cos-api-gateway`, `cos-workflow-service`, and `ff-api`, with no Heroku-specific variables.
 5. THE `.env.dev` file on the OCI_Instance SHALL contain all development secrets and connection strings required by the Dev_Stack services, with no Heroku-specific variables.
-6. THE `dot-portal-api` `.env.example` file SHALL be updated to reflect the new domain values for `FOOT_FACTORY_BASE_DOMAIN`, `DOT_COS_BASE_DOMAIN`, `FOOT_FACTORY_CORS_ENDPOINT`, and `DOT_COS_CORS_ENDPOINT`.
+6. THE `dot-portal-api` `.env.example` file SHALL be updated to reflect the new domain values for `FLOORIX_BASE_DOMAIN`, `DOT_COS_BASE_DOMAIN`, `FLOORIX_CORS_ENDPOINT`, and `DOT_COS_CORS_ENDPOINT`.
 
 ---
 
