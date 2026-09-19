@@ -13,6 +13,7 @@ import Taxonomies from "./pages/Taxonomies";
 import AuditLogs from "./pages/AuditLogs";
 import Enquiries from "./pages/Enquiries";
 import TrainingPlanRequests from "./pages/TrainingPlanRequests";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
   if (!session) {
@@ -20,6 +21,8 @@ function AuthGuard({ children, session }: { children: React.ReactNode; session: 
   }
   return <>{children}</>;
 }
+
+// ...
 
 function Layout() {
   const navigate = useNavigate();
@@ -129,6 +132,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<AuthGuard session={session}><Layout /></AuthGuard>}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/courses" element={<CoursesList />} />
