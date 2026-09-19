@@ -11,6 +11,7 @@ import {
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
 import { getMetrics } from "./lib/api";
+import auditLogger from "./lib/audit";
 import type { Session } from "@supabase/supabase-js";
 import { Login } from "./pages/Login";
 import Interests from "./pages/Interests";
@@ -59,6 +60,24 @@ function Layout() {
   };
 
   const handleLogout = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const u = session.user;
+      const tenantId = u.app_metadata?.activeTenantId;
+      if (tenantId) {
+        auditLogger.track({
+          tenantId: tenantId,
+          action: "USER_LOGOUT",
+          actorId: u.id,
+          actorType: "user",
+          details: { email: u.email },
+          timestamp: new Date().toISOString(),
+        });
+        if (typeof (auditLogger as any).flush === "function") {
+          await (auditLogger as any).flush();
+        }
+      }
+    }
     await supabase.auth.signOut();
     navigate("/login");
   };

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { getMetrics } from "../lib/api";
+import auditLogger from "../lib/audit";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -26,6 +27,21 @@ export function Login() {
       try {
         // Verify tenant membership by calling a protected endpoint
         await getMetrics();
+        const u = data.session.user;
+        const tenantId = u.app_metadata?.activeTenantId;
+        if (tenantId) {
+          auditLogger.track({
+            tenantId: tenantId,
+            action: "USER_LOGIN",
+            actorId: u.id,
+            actorType: "user",
+            details: { email: u.email },
+            timestamp: new Date().toISOString(),
+          });
+          if (typeof (auditLogger as any).flush === "function") {
+            await (auditLogger as any).flush();
+          }
+        }
         setLoading(false);
         navigate("/");
       } catch (err: any) {
