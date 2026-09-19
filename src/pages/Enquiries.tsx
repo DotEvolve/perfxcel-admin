@@ -34,7 +34,6 @@ export default function Enquiries() {
       fetchEnquiries();
     } catch (err) {
       console.error(err);
-      alert("Failed to update status");
     }
   };
 
@@ -84,7 +83,6 @@ export default function Enquiries() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      alert("Failed to download CSV");
     }
   };
 

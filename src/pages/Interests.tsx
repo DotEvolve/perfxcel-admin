@@ -72,9 +72,13 @@ export default function Interests() {
     try {
       await updateInterestStatus(id, status);
       await loadInterests();
-    } catch (err) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
       console.error(err);
-      alert("Failed to update status");
+      setConvertError((prev) => ({
+        ...prev,
+        [id]: axiosErr.response?.data?.message ?? "Failed to update status",
+      }));
     } finally {
       setUpdating(null);
     }

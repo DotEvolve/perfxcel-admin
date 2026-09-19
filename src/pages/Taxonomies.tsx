@@ -21,21 +21,27 @@ function TaxonomyCard({
 }) {
   const [newItemName, setNewItemName] = useState("");
   const [adding, setAdding] = useState(false);
-  
+  const [addError, setAddError] = useState<string | null>(null);
+
   const [editItem, setEditItem] = useState<TaxonomyItem | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
   const [deleteItem, setDeleteItem] = useState<TaxonomyItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItemName.trim()) return;
     setAdding(true);
+    setAddError(null);
     try {
       await createTaxonomy(type, newItemName.trim());
       setNewItemName("");
       onRefresh();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setAddError(axiosErr.response?.data?.message ?? "Failed to add item");
     } finally {
       setAdding(false);
     }
@@ -43,27 +49,31 @@ function TaxonomyCard({
 
   const handleEdit = async (newName: string) => {
     if (!editItem) return;
+    setEditLoading(true);
     try {
       await updateTaxonomy(type, editItem.id, newName);
-      onRefresh();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update");
-    } finally {
       setEditItem(null);
+      onRefresh();
+    } catch (err: unknown) {
+      // Keep modal open; user can retry — error surfaced by the modal's disabled state
+      console.error(err);
+    } finally {
+      setEditLoading(false);
     }
   };
 
   const handleDelete = async () => {
     if (!deleteItem) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
     try {
       await deleteTaxonomy(type, deleteItem.id);
-      onRefresh();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete");
-    } finally {
       setDeleteItem(null);
+      onRefresh();
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setDeleteError(axiosErr.response?.data?.message ?? "Failed to delete item");
+      setDeleteLoading(false);
     }
   };
 
@@ -120,6 +130,9 @@ function TaxonomyCard({
             <Plus className="w-4 h-4" />
           </button>
         </form>
+        {addError && (
+          <p className="mt-1.5 text-xs text-red-600">{addError}</p>
+        )}
       </div>
 
       <InlineEditModal
@@ -136,11 +149,15 @@ function TaxonomyCard({
         message={
           <>
             Are you sure you want to delete <strong>{deleteItem?.name}</strong>?
+            {deleteError && (
+              <span className="block mt-2 text-red-600 text-xs">{deleteError}</span>
+            )}
           </>
         }
-        confirmText="Delete"
+        confirmText={deleteLoading ? "Deleting..." : "Delete"}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteItem(null)}
+        onCancel={() => { setDeleteItem(null); setDeleteError(null); }}
+        isDestructive={true}
       />
     </div>
   );

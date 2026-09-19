@@ -63,9 +63,8 @@ export default function Enrollments() {
     try {
       await updateEnrollmentStatus(id, status);
       await loadEnrollments();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      alert("Failed to update status");
     } finally {
       setUpdating(null);
     }
@@ -175,7 +174,6 @@ export default function Enrollments() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      alert("Failed to download CSV");
     }
   };
 
