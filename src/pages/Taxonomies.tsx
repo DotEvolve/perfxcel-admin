@@ -67,7 +67,9 @@ export default function Taxonomies() {
 
   const filterItems = (items: TaxonomyItem[]) => {
     if (!search.trim()) return items;
-    return items.filter(item => item.name.toLowerCase().includes(search.toLowerCase()));
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase()),
+    );
   };
 
   const fetchTaxonomies = () => {
@@ -81,7 +83,9 @@ export default function Taxonomies() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-gray-900">Taxonomies Management</h3>
+        <h3 className="text-2xl font-bold text-gray-900">
+          Taxonomies Management
+        </h3>
         <div className="relative min-w-[250px]">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input

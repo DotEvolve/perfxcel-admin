@@ -102,15 +102,15 @@ gitGraph
 
 ### Environment Isolation Summary
 
-| Concern | Prod | Dev |
-|---|---|---|
-| Docker Compose profile | `prod` | `dev` |
-| Ports | 3001, 3002, 3003 | 3011, 3012, 3013 |
-| Redis DB | 0 | 1 |
-| Supabase project | New dedicated prod project | Existing project |
-| QStash project | Prod Upstash project | Dev Upstash project |
-| Hostnames | `*.govnix.net`, `api.floorix.net` | `*-dev.govnix.net`, `api-dev.floorix.net` |
-| Env file | `.env.prod` | `.env.dev` |
+| Concern                | Prod                              | Dev                                       |
+| ---------------------- | --------------------------------- | ----------------------------------------- |
+| Docker Compose profile | `prod`                            | `dev`                                     |
+| Ports                  | 3001, 3002, 3003                  | 3011, 3012, 3013                          |
+| Redis DB               | 0                                 | 1                                         |
+| Supabase project       | New dedicated prod project        | Existing project                          |
+| QStash project         | Prod Upstash project              | Dev Upstash project                       |
+| Hostnames              | `*.govnix.net`, `api.floorix.net` | `*-dev.govnix.net`, `api-dev.floorix.net` |
+| Env file               | `.env.prod`                       | `.env.dev`                                |
 
 ---
 
@@ -121,6 +121,7 @@ gitGraph
 **Responsibilities**: Host all Docker containers, nginx, Redis, and TLS certificates.
 
 **Setup requirements**:
+
 - Ubuntu 22.04 LTS (or Oracle Linux 8)
 - Docker Engine (latest stable) + Docker Compose v2 plugin
 - Certbot + `certbot-dns-cloudflare` plugin
@@ -134,16 +135,16 @@ gitGraph
 
 Single compose file with three profiles: `prod`, `dev`, `all`. Services:
 
-| Service | Profile | Port | Env file | Redis DB |
-|---|---|---|---|---|
-| `cos-api-gateway` | prod | 3001 | `.env.prod` | 0 |
-| `cos-workflow-service` | prod | 3002 | `.env.prod` | 0 |
-| `ff-api` | prod | 3003 | `.env.prod` | — |
-| `cos-api-gateway-dev` | dev | 3011 | `.env.dev` | 1 |
-| `cos-workflow-service-dev` | dev | 3012 | `.env.dev` | 1 |
-| `ff-api-dev` | dev | 3013 | `.env.dev` | — |
-| `redis` | all | 6379 (localhost) | — | shared |
-| `nginx` | all | 80, 443 | — | — |
+| Service                    | Profile | Port             | Env file    | Redis DB |
+| -------------------------- | ------- | ---------------- | ----------- | -------- |
+| `cos-api-gateway`          | prod    | 3001             | `.env.prod` | 0        |
+| `cos-workflow-service`     | prod    | 3002             | `.env.prod` | 0        |
+| `ff-api`                   | prod    | 3003             | `.env.prod` | —        |
+| `cos-api-gateway-dev`      | dev     | 3011             | `.env.dev`  | 1        |
+| `cos-workflow-service-dev` | dev     | 3012             | `.env.dev`  | 1        |
+| `ff-api-dev`               | dev     | 3013             | `.env.dev`  | —        |
+| `redis`                    | all     | 6379 (localhost) | —           | shared   |
+| `nginx`                    | all     | 80, 443          | —           | —        |
 
 All services use `restart: always`. The `nginx` service depends on all six application containers.
 
@@ -152,6 +153,7 @@ All services use `restart: always`. The `nginx` service depends on all six appli
 All three services use the same base pattern with one CMD difference:
 
 **`cos-api-gateway` and `cos-workflow-service`**:
+
 ```dockerfile
 FROM node:24-alpine
 WORKDIR /app
@@ -164,6 +166,7 @@ CMD ["node", "api/index.js"]
 ```
 
 **`ff-api`**:
+
 ```dockerfile
 FROM node:24-alpine
 WORKDIR /app
@@ -176,6 +179,7 @@ CMD ["node", "dist/server.js"]
 ```
 
 **`.dockerignore`** (all three repos):
+
 ```
 node_modules
 .env*
@@ -189,6 +193,7 @@ dist
 **Location**: `/opt/dotevolve/nginx/`
 
 nginx runs as a Docker container, mounting config files read-only. It handles:
+
 - TLS termination using Let's Encrypt wildcard certs
 - HTTP → HTTPS 301 redirects
 - Hostname-based upstream routing
@@ -196,6 +201,7 @@ nginx runs as a Docker container, mounting config files read-only. It handles:
 - Proxy header forwarding (`Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`)
 
 Config file layout:
+
 ```
 nginx/
 ├── nginx.conf              # Main config, includes conf.d/
@@ -207,6 +213,7 @@ nginx/
 ```
 
 Timeout configuration:
+
 - `cos-api-gateway` upstreams: `proxy_read_timeout 120s`
 - `cos-workflow-service` upstreams: `proxy_read_timeout 300s` (PDF/AI processing)
 - `ff-api` upstreams: default (60s)
@@ -234,6 +241,7 @@ Credentials file at `~/.secrets/cloudflare.ini` with `chmod 600`. Auto-renewal v
 ### 6. Self-Hosted Redis
 
 Single Redis 7 container shared by both stacks, isolated by DB index:
+
 - DB 0 → prod services
 - DB 1 → dev services
 - Bound to `127.0.0.1:6379` only (never publicly exposed)
@@ -247,15 +255,18 @@ Single Redis 7 container shared by both stacks, isolated by DB index:
 One `deploy.yml` workflow per service repo. The workflow is parameterised by branch to determine prod vs dev target.
 
 **Workflow triggers**:
+
 - `push` to `master` → prod deploy + CalVer tag
 - `push` to `dev` → dev deploy
 
 **Required repository secrets**:
+
 - `OCI_HOST` — OCI instance public IP
 - `OCI_USER` — deploy SSH username (e.g. `deploy`)
 - `OCI_SSH_KEY` — private SSH key (RSA or Ed25519)
 
 **Prod deploy job steps**:
+
 1. Checkout code
 2. SSH into OCI instance
 3. `cd /opt/dotevolve/repos/{service} && git pull origin master`
@@ -269,6 +280,7 @@ One `deploy.yml` workflow per service repo. The workflow is parameterised by bra
 **Dev deploy job steps** (same as prod, steps 1–8, targeting dev service and dev hostname; no CalVer tag).
 
 **CalVer tag computation** (bash, runs in the Actions runner after successful prod deploy):
+
 ```bash
 YEAR=$(date -u +%Y)
 MONTH=$(date -u +%m)
@@ -289,23 +301,24 @@ git push origin "$TAG"
 
 Two separate Upstash QStash projects:
 
-| Project | Old target | New target |
-|---|---|---|
-| Prod | `https://cos-workflow.herokuapp.com/...` | `https://workflow.govnix.net/...` |
-| Dev | `https://cos-workflow-dev.herokuapp.com/...` | `https://workflow-dev.govnix.net/...` |
+| Project | Old target                                   | New target                            |
+| ------- | -------------------------------------------- | ------------------------------------- |
+| Prod    | `https://cos-workflow.herokuapp.com/...`     | `https://workflow.govnix.net/...`     |
+| Dev     | `https://cos-workflow-dev.herokuapp.com/...` | `https://workflow-dev.govnix.net/...` |
 
 Updated via the Upstash console or API. No code changes required.
 
 ### 9. Supabase Environment Separation
 
-| | Prod | Dev |
-|---|---|---|
-| Project | New dedicated project | Existing project |
-| RLS | Enabled on all tables from day 0 | Existing state |
-| Key used in backends | `service_role` only | `service_role` only |
-| Key used in browser clients | `anon` only | `anon` only |
+|                             | Prod                             | Dev                 |
+| --------------------------- | -------------------------------- | ------------------- |
+| Project                     | New dedicated project            | Existing project    |
+| RLS                         | Enabled on all tables from day 0 | Existing state      |
+| Key used in backends        | `service_role` only              | `service_role` only |
+| Key used in browser clients | `anon` only                      | `anon` only         |
 
 Migration steps for the new prod Supabase project:
+
 1. Create new project in Supabase dashboard
 2. Run all existing migrations against the new project (`supabase db push` or manual SQL)
 3. Enable RLS on all tables
@@ -315,14 +328,15 @@ Migration steps for the new prod Supabase project:
 
 The `dot-portal-api` reads app configuration from the `apps` table in Supabase. Two rows require updates:
 
-| `slug` | Column | Old value | New value |
-|---|---|---|---|
-| `govnix` | `base_domain` | `cos.dotevolve.net` | `govnix.net` |
-| `govnix` | `cors_endpoint` | `https://api.govnix.net/api/v1/internal/cors-origins` | `https://api.govnix.net/api/v1/internal/cors-origins` |
-| `floorix` | `base_domain` | `floorix.dotevolve.net` | `floorix.net` |
+| `slug`    | Column          | Old value                                              | New value                                              |
+| --------- | --------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| `govnix`  | `base_domain`   | `cos.dotevolve.net`                                    | `govnix.net`                                           |
+| `govnix`  | `cors_endpoint` | `https://api.govnix.net/api/v1/internal/cors-origins`  | `https://api.govnix.net/api/v1/internal/cors-origins`  |
+| `floorix` | `base_domain`   | `floorix.dotevolve.net`                                | `floorix.net`                                          |
 | `floorix` | `cors_endpoint` | `https://api.floorix.net/api/v1/internal/cors-origins` | `https://api.floorix.net/api/v1/internal/cors-origins` |
 
 SQL migration (run against both prod and dev Supabase projects):
+
 ```sql
 UPDATE apps SET
   base_domain = 'govnix.net',
@@ -340,22 +354,25 @@ After this update, `dot-portal-api`'s `loadAppRegistryFromDb()` will provision t
 ### 11. Environment Variable Updates
 
 **`cos-frontend` (Vercel)**:
-| Branch | Variable | Value |
-|---|---|---|
-| `master` | `VITE_API_GATEWAY_URL` | `https://api.govnix.net` |
-| `dev` | `VITE_API_GATEWAY_URL` | `https://api-dev.govnix.net` |
+
+| Branch   | Variable               | Value                        |
+| -------- | ---------------------- | ---------------------------- |
+| `master` | `VITE_API_GATEWAY_URL` | `https://api.govnix.net`     |
+| `dev`    | `VITE_API_GATEWAY_URL` | `https://api-dev.govnix.net` |
 
 **`dot-portal-api` (Vercel)**:
-| Environment | Variable | Value |
-|---|---|---|
-| Production | `DOT_COS_BASE_DOMAIN` | `govnix.net` |
-| Production | `FOOT_FACTORY_BASE_DOMAIN` | `floorix.net` |
-| Production | `DOT_COS_CORS_ENDPOINT` | `https://api.govnix.net/api/v1/internal/cors-origins` |
-| Production | `FOOT_FACTORY_CORS_ENDPOINT` | `https://api.floorix.net/api/v1/internal/cors-origins` |
-| Dev | `DOT_COS_CORS_ENDPOINT` | `https://api-dev.govnix.net/api/v1/internal/cors-origins` |
-| Dev | `FOOT_FACTORY_CORS_ENDPOINT` | `https://api-dev.floorix.net/api/v1/internal/cors-origins` |
+
+| Environment | Variable                     | Value                                                      |
+| ----------- | ---------------------------- | ---------------------------------------------------------- |
+| Production  | `DOT_COS_BASE_DOMAIN`        | `govnix.net`                                               |
+| Production  | `FOOT_FACTORY_BASE_DOMAIN`   | `floorix.net`                                              |
+| Production  | `DOT_COS_CORS_ENDPOINT`      | `https://api.govnix.net/api/v1/internal/cors-origins`      |
+| Production  | `FOOT_FACTORY_CORS_ENDPOINT` | `https://api.floorix.net/api/v1/internal/cors-origins`     |
+| Dev         | `DOT_COS_CORS_ENDPOINT`      | `https://api-dev.govnix.net/api/v1/internal/cors-origins`  |
+| Dev         | `FOOT_FACTORY_CORS_ENDPOINT` | `https://api-dev.floorix.net/api/v1/internal/cors-origins` |
 
 **`cos-api-gateway` `.env.prod` / `.env.dev`** (on OCI instance):
+
 - `WORKFLOW_SERVICE_URL` → `https://workflow.govnix.net` (prod) / `https://workflow-dev.govnix.net` (dev)
 - `SUPABASE_URL` → new prod project URL (prod) / existing dev project URL (dev)
 - `SUPABASE_ANON_KEY` → corresponding project anon key
@@ -365,15 +382,15 @@ After this update, `dot-portal-api`'s `loadAppRegistryFromDb()` will provision t
 
 Each Vercel project requires custom domain registration via the Vercel dashboard or CLI:
 
-| Vercel Project | Prod Domain | Dev Domain |
-|---|---|---|
-| `cos-frontend` | `app.govnix.net` | `app-dev.govnix.net` |
-| `cos-admin-dashboard` | `admin.govnix.net` | `admin-dev.govnix.net` |
-| `floorix-app` | `app.floorix.net` | `app-dev.floorix.net` |
-| `floorix-admin` | `admin.floorix.net` | `admin-dev.floorix.net` |
-| `dot-portal` | `portal.dotevolve.net` | `portal-dev.dotevolve.net` |
-| `dot-admin` | `admin.dotevolve.net` | `admin-dev.dotevolve.net` |
-| `dot-portal-api` | `portal-api.dotevolve.net` | `portal-api-dev.dotevolve.net` |
+| Vercel Project        | Prod Domain                | Dev Domain                     |
+| --------------------- | -------------------------- | ------------------------------ |
+| `cos-frontend`        | `app.govnix.net`           | `app-dev.govnix.net`           |
+| `cos-admin-dashboard` | `admin.govnix.net`         | `admin-dev.govnix.net`         |
+| `floorix-app`         | `app.floorix.net`          | `app-dev.floorix.net`          |
+| `floorix-admin`       | `admin.floorix.net`        | `admin-dev.floorix.net`        |
+| `dot-portal`          | `portal.dotevolve.net`     | `portal-dev.dotevolve.net`     |
+| `dot-admin`           | `admin.dotevolve.net`      | `admin-dev.dotevolve.net`      |
+| `dot-portal-api`      | `portal-api.dotevolve.net` | `portal-api-dev.dotevolve.net` |
 
 ### 13. Health Check Endpoints
 
@@ -384,11 +401,13 @@ Each Vercel project requires custom domain registration via the Vercel dashboard
 ### 14. Heroku Decommission Sequence
 
 Decommission is gated on three conditions being met simultaneously:
+
 1. All three OCI prod services respond HTTP 200 on `/health`
 2. QStash target URLs updated to OCI hostnames (Req 8)
 3. App Registry updated in Supabase (Req 9)
 
 Once all three are confirmed:
+
 1. Scale Heroku dynos to 0 (or delete apps)
 2. Remove Heroku DNS entries / custom domains from Heroku dashboard
 3. Verify no DNS records still point to `*.herokuapp.com`
@@ -449,7 +468,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # needed for tag listing
+          fetch-depth: 0 # needed for tag listing
       - name: Deploy to OCI
         uses: appleboy/ssh-action@v1
         with:
@@ -533,6 +552,7 @@ This feature is an infrastructure migration with no new application logic. Prope
 ### PBT Applicability Assessment
 
 This migration involves:
+
 - Docker Compose YAML configuration
 - nginx configuration files
 - Dockerfiles
@@ -548,31 +568,31 @@ None of these are functions with testable input/output behaviour. PBT is not app
 
 These verify that the infrastructure is wired up correctly. Each is a single execution — running them 100 times adds no value.
 
-| Test | Command | Expected |
-|---|---|---|
-| Prod API gateway health | `curl -f https://api.govnix.net/health` | HTTP 200 |
-| Prod workflow service health | `curl -f https://workflow.govnix.net/health` | HTTP 200 |
-| Prod ff-api health | `curl -f https://api.floorix.net/health` | HTTP 200 |
-| Dev API gateway health | `curl -f https://api-dev.govnix.net/health` | HTTP 200 |
-| Dev workflow service health | `curl -f https://workflow-dev.govnix.net/health` | HTTP 200 |
-| Dev ff-api health | `curl -f https://api-dev.floorix.net/health` | HTTP 200 |
-| HTTP → HTTPS redirect | `curl -I http://api.govnix.net/` | HTTP 301 |
-| TLS certificate validity | `curl -v https://api.govnix.net/health` | No cert error |
-| Redis prod connectivity | `docker exec redis redis-cli -n 0 ping` | `PONG` |
-| Redis dev connectivity | `docker exec redis redis-cli -n 1 ping` | `PONG` |
-| Redis not publicly exposed | `nc -zv {OCI_IP} 6379` (from external) | Connection refused |
+| Test                         | Command                                          | Expected           |
+| ---------------------------- | ------------------------------------------------ | ------------------ |
+| Prod API gateway health      | `curl -f https://api.govnix.net/health`          | HTTP 200           |
+| Prod workflow service health | `curl -f https://workflow.govnix.net/health`     | HTTP 200           |
+| Prod ff-api health           | `curl -f https://api.floorix.net/health`         | HTTP 200           |
+| Dev API gateway health       | `curl -f https://api-dev.govnix.net/health`      | HTTP 200           |
+| Dev workflow service health  | `curl -f https://workflow-dev.govnix.net/health` | HTTP 200           |
+| Dev ff-api health            | `curl -f https://api-dev.floorix.net/health`     | HTTP 200           |
+| HTTP → HTTPS redirect        | `curl -I http://api.govnix.net/`                 | HTTP 301           |
+| TLS certificate validity     | `curl -v https://api.govnix.net/health`          | No cert error      |
+| Redis prod connectivity      | `docker exec redis redis-cli -n 0 ping`          | `PONG`             |
+| Redis dev connectivity       | `docker exec redis redis-cli -n 1 ping`          | `PONG`             |
+| Redis not publicly exposed   | `nc -zv {OCI_IP} 6379` (from external)           | Connection refused |
 
 ### Integration Tests (run after full migration)
 
 These verify end-to-end behaviour across service boundaries.
 
-| Test | Steps | Expected |
-|---|---|---|
-| Authenticated API request (prod) | Obtain Supabase JWT → `GET https://api.govnix.net/api/v1/me` with Bearer token | HTTP 200, user data returned |
-| QStash delivery (prod) | Trigger a workflow that enqueues a QStash job → check workflow-service logs | Job received and processed |
-| Tenant subdomain provisioning | Create a test tenant via `dot-portal-api` → verify CNAME record created in Cloudflare | DNS record exists |
-| App registry warm cache | Restart `dot-portal-api` → call an endpoint that uses `loadAppRegistry()` | Returns `govnix.net` base domain |
-| Supabase RLS (prod) | Attempt a direct table query with `anon` key on a protected table | RLS policy blocks or restricts |
+| Test                             | Steps                                                                                 | Expected                         |
+| -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
+| Authenticated API request (prod) | Obtain Supabase JWT → `GET https://api.govnix.net/api/v1/me` with Bearer token        | HTTP 200, user data returned     |
+| QStash delivery (prod)           | Trigger a workflow that enqueues a QStash job → check workflow-service logs           | Job received and processed       |
+| Tenant subdomain provisioning    | Create a test tenant via `dot-portal-api` → verify CNAME record created in Cloudflare | DNS record exists                |
+| App registry warm cache          | Restart `dot-portal-api` → call an endpoint that uses `loadAppRegistry()`             | Returns `govnix.net` base domain |
+| Supabase RLS (prod)              | Attempt a direct table query with `anon` key on a protected table                     | RLS policy blocks or restricts   |
 
 ### CI/CD Pipeline Tests (automated, per deploy)
 
@@ -585,12 +605,14 @@ These run automatically as part of every GitHub Actions deployment:
 ### Rollback Verification
 
 After any rollback to a CalVer tag:
+
 1. Run the smoke tests above against the affected service
 2. Confirm the running image tag matches the target CalVer tag: `docker inspect {service} | grep Image`
 
 ### Pre-Decommission Checklist (Heroku)
 
 Before scaling Heroku dynos to zero, verify all of the following:
+
 - [ ] All 6 OCI health check smoke tests pass
 - [ ] QStash target URLs updated and a test job delivered successfully
 - [ ] App Registry updated in Supabase (both prod and dev)

@@ -13,13 +13,15 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
       config.headers.Authorization = `Bearer ${session.access_token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -30,7 +32,7 @@ api.interceptors.response.use(
       window.location.href = "/#/login"; // using hash router
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export interface CourseSchedule {
@@ -40,7 +42,7 @@ export interface CourseSchedule {
   end_date?: string | null;
   location?: string | null;
   method?: string | null;
-  status: 'open' | 'guaranteed' | 'filling_fast' | 'closed' | 'cancelled';
+  status: "open" | "guaranteed" | "filling_fast" | "closed" | "cancelled";
 }
 
 export interface Course {
@@ -61,7 +63,7 @@ export interface Course {
   delivery_modes?: TaxonomyItem[];
   course_schedules?: CourseSchedule[];
   is_blended?: boolean;
-  status?: 'active' | 'archived' | 'deleted';
+  status?: "active" | "archived" | "deleted";
   is_public?: boolean;
   deleted_at?: string | null;
 }
@@ -80,7 +82,7 @@ export interface CourseFormPayload {
   association_ids: string[];
   delivery_mode_ids: string[];
   schedules: CourseSchedule[];
-  status?: 'active' | 'archived';
+  status?: "active" | "archived";
   is_public?: boolean;
   short_code?: string;
 }
@@ -112,7 +114,9 @@ export const getMetrics = async (): Promise<DashboardMetrics> => {
   return response.data.data;
 };
 
-export const getInterests = async (params?: Record<string, any>): Promise<PaginatedResponse<any>> => {
+export const getInterests = async (
+  params?: Record<string, any>,
+): Promise<PaginatedResponse<any>> => {
   const response = await api.get("/interests", { params });
   return response.data;
 };
@@ -122,22 +126,32 @@ export const updateInterestStatus = async (id: string, status: string) => {
   return response.data;
 };
 
-export const getCourses = async (params?: Record<string, any>): Promise<PaginatedResponse<Course>> => {
+export const getCourses = async (
+  params?: Record<string, any>,
+): Promise<PaginatedResponse<Course>> => {
   const response = await api.get("/courses", { params });
   return response.data;
 };
 
-export const bulkUpdateCourses = async (ids: string[], updates: Partial<Course>) => {
+export const bulkUpdateCourses = async (
+  ids: string[],
+  updates: Partial<Course>,
+) => {
   const response = await api.patch("/courses/bulk", { ids, updates });
   return response.data;
 };
 
-export const createCourse = async (payload: CourseFormPayload): Promise<Course> => {
+export const createCourse = async (
+  payload: CourseFormPayload,
+): Promise<Course> => {
   const response = await api.post("/courses", payload);
   return response.data.data;
 };
 
-export const updateCourse = async (id: string, payload: CourseFormPayload): Promise<Course> => {
+export const updateCourse = async (
+  id: string,
+  payload: CourseFormPayload,
+): Promise<Course> => {
   const response = await api.put(`/courses/${id}`, payload);
   return response.data.data;
 };
@@ -147,16 +161,20 @@ export const getTaxonomies = async () => {
   return response.data.data;
 };
 
-export const getEnrollments = async (params?: Record<string, any>): Promise<PaginatedResponse<any>> => {
+export const getEnrollments = async (
+  params?: Record<string, any>,
+): Promise<PaginatedResponse<any>> => {
   const response = await api.get("/enrollments", { params });
   return response.data;
 };
 
 export const createEnrollment = (interestId: string) =>
-  api.post("/enrollments", { interest_id: interestId }).then(r => r.data.data);
+  api
+    .post("/enrollments", { interest_id: interestId })
+    .then((r) => r.data.data);
 
 export const updateEnrollmentStatus = (id: string, status: string) =>
-  api.patch(`/enrollments/${id}`, { status }).then(r => r.data.data);
+  api.patch(`/enrollments/${id}`, { status }).then((r) => r.data.data);
 
 // --- Enquiries ---
 export const getEnquiries = async (params: {
@@ -185,14 +203,14 @@ export const getTrainingPlanRequests = async (params: {
 
 // --- Audit Logs ---
 export const getAuditLogs = async (
-  filters?: AuditLogFilters
+  filters?: AuditLogFilters,
 ): Promise<AuditLogResponse> => {
   const backendFilters = {
     ...filters,
     pageSize: filters?.limit,
   };
   const response = await api.get("/audit-logs", { params: backendFilters });
-  
+
   const mappedData = response.data.data.map((log: any) => ({
     id: log.id || `${log.tenant_id}-${log.timestamp}`,
     action: log.action,
@@ -202,11 +220,11 @@ export const getAuditLogs = async (
     userEmail: log.actor_id, // We fallback to actor_id if no email is attached to log
     tenantId: log.tenant_id,
     metadata: log.details,
-    createdAt: log.timestamp
+    createdAt: log.timestamp,
   }));
-  
+
   return {
     ...response.data,
-    data: mappedData
+    data: mappedData,
   };
 };

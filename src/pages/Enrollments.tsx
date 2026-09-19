@@ -85,7 +85,7 @@ export default function Enrollments() {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder("asc"); 
+      setSortOrder("asc");
     }
   };
 
@@ -105,7 +105,7 @@ export default function Enrollments() {
       if (statusFilter !== "all") params.status = statusFilter;
 
       const res: PaginatedResponse<Enrollment> = await getEnrollments(params);
-      
+
       if (res.data.length === 0) {
         alert("No data to download.");
         return;
@@ -116,14 +116,15 @@ export default function Enrollments() {
         headers.join(","),
         ...res.data.map((i: any) => {
           const date = new Date(i.created_at).toLocaleDateString();
-          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
-          
+          const escapeCSV = (str: string) =>
+            `"${(str || "").replace(/"/g, '""')}"`;
+
           return [
             date,
             escapeCSV(i.course_interests?.name),
             escapeCSV(i.course_interests?.email),
             escapeCSV(i.course_interests?.courses?.title),
-            escapeCSV(i.status)
+            escapeCSV(i.status),
           ].join(",");
         }),
       ].join("\n");
@@ -132,11 +133,14 @@ export default function Enrollments() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `enrollments_${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `enrollments_${new Date().toISOString().split("T")[0]}.csv`,
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       alert("Failed to download CSV");
     }
@@ -162,11 +166,17 @@ export default function Enrollments() {
           placeholder="Search name or email..."
           className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border"
           value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1);
+          }}
         />
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white"
         >
           <option value="all">All Statuses</option>
@@ -179,7 +189,9 @@ export default function Enrollments() {
 
       <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200 flex flex-col">
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading enrollments...</div>
+          <div className="text-center py-10 text-gray-500">
+            Loading enrollments...
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -195,24 +207,29 @@ export default function Enrollments() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Course
                     </th>
-                    <th 
+                    <th
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort("status")}
                     >
                       Status <SortIcon field="status" />
                     </th>
-                    <th 
+                    <th
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort("created_at")}
                     >
                       Created <SortIcon field="created_at" />
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {enrollments.map((enrollment) => (
-                    <tr key={enrollment.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={enrollment.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {enrollment.course_interests?.name || "-"}
                       </td>
@@ -223,7 +240,9 @@ export default function Enrollments() {
                         {enrollment.course_interests?.courses?.title || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(enrollment.status)}`}>
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(enrollment.status)}`}
+                        >
                           {enrollment.status.toUpperCase()}
                         </span>
                       </td>
@@ -233,7 +252,9 @@ export default function Enrollments() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <select
                           value={enrollment.status}
-                          onChange={(e) => handleUpdateStatus(enrollment.id, e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateStatus(enrollment.id, e.target.value)
+                          }
                           disabled={updating === enrollment.id}
                           className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50"
                         >
@@ -242,13 +263,20 @@ export default function Enrollments() {
                           <option value="achieved">Achieved</option>
                           <option value="dropped">Dropped</option>
                         </select>
-                        {updating === enrollment.id && <span className="text-gray-500 ml-2 text-xs">Updating...</span>}
+                        {updating === enrollment.id && (
+                          <span className="text-gray-500 ml-2 text-xs">
+                            Updating...
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
                   {enrollments.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      <td
+                        colSpan={6}
+                        className="px-6 py-8 text-center text-gray-500"
+                      >
                         No enrollments found matching your filters.
                       </td>
                     </tr>
@@ -256,7 +284,12 @@ export default function Enrollments() {
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} limit={limit} total={total} onPageChange={setPage} />
+            <Pagination
+              page={page}
+              limit={limit}
+              total={total}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>

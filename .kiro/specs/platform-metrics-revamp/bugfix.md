@@ -5,6 +5,7 @@
 The PlatformMetrics page in the Admin Dashboard currently displays hardcoded/static infrastructure data instead of real-time metrics from Heroku. The page attempts to fetch infrastructure details from a `/infra` endpoint that either returns static data or is not properly implemented. This prevents administrators from monitoring actual platform health, resource utilization, and infrastructure status.
 
 This bugfix will implement a complete dynamic revamp by:
+
 - Creating a new `/infra` endpoint in the API Gateway that fetches real Heroku metrics
 - Integrating with Heroku Platform API to retrieve comprehensive infrastructure data
 - Displaying real-time metrics including dyno status, resource usage, app health, and detailed infrastructure information

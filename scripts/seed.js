@@ -7,24 +7,24 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  db: { schema: "perfxcel" }
+  db: { schema: "perfxcel" },
 });
 
 async function seed() {
   console.log("Seeding taxonomies...");
-  
+
   // Insert Categories
   const { data: categories } = await supabase
     .from("categories")
     .insert([{ name: "Leadership" }, { name: "IT" }, { name: "Finance" }])
     .select();
-  
+
   // Insert Cities
   const { data: cities } = await supabase
     .from("cities")
     .insert([{ name: "Dubai" }, { name: "London" }, { name: "New York" }])
     .select();
-  
+
   // Insert Associations
   const { data: associations } = await supabase
     .from("associations")
@@ -46,7 +46,7 @@ async function seed() {
       is_published: true,
       category_id: catId,
       city_id: cityId,
-      association_id: assocId
+      association_id: assocId,
     },
     {
       title: "Cloud Computing Fundamentals",
@@ -56,7 +56,7 @@ async function seed() {
       is_published: true,
       category_id: categories?.[1]?.id,
       city_id: cities?.[1]?.id,
-      association_id: associations?.[1]?.id
+      association_id: associations?.[1]?.id,
     },
     {
       title: "Corporate Finance 101",
@@ -66,8 +66,8 @@ async function seed() {
       is_published: false,
       category_id: categories?.[2]?.id,
       city_id: cities?.[2]?.id,
-      association_id: null
-    }
+      association_id: null,
+    },
   ];
 
   for (const course of courses) {

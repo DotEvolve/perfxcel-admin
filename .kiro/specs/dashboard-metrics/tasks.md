@@ -127,49 +127,70 @@ Create `perfxcel-admin/src/pages/Dashboard.tsx`.
     2. **Taxonomies** — `icon={<Tags className="w-5 h-5" />}`:
        - 4 plain rows (no badges — these are structural categories, not workflow statuses):
          ```tsx
-         {[
-           ["Categories", metrics.taxonomies.categories],
-           ["Cities", metrics.taxonomies.cities],
-           ["Associations", metrics.taxonomies.associations],
-           ["Delivery Modes", metrics.taxonomies.delivery_modes],
-         ].map(([label, count]) => (
-           <div key={label} className="flex items-center justify-between py-1 text-sm">
-             <span className="text-gray-600">{label}</span>
-             <span className="font-semibold text-gray-900">{count}</span>
-           </div>
-         ))}
+         {
+           [
+             ["Categories", metrics.taxonomies.categories],
+             ["Cities", metrics.taxonomies.cities],
+             ["Associations", metrics.taxonomies.associations],
+             ["Delivery Modes", metrics.taxonomies.delivery_modes],
+           ].map(([label, count]) => (
+             <div
+               key={label}
+               className="flex items-center justify-between py-1 text-sm"
+             >
+               <span className="text-gray-600">{label}</span>
+               <span className="font-semibold text-gray-900">{count}</span>
+             </div>
+           ));
+         }
          ```
 
     3. **Interests** — `icon={<Users className="w-5 h-5" />}`:
        - 4 badge rows using the status → color map:
          ```tsx
-         {[
-           ["new", metrics.interests.new, "indigo"],
-           ["contacted", metrics.interests.contacted, "amber"],
-           ["enrolled", metrics.interests.enrolled, "green"],
-           ["rejected", metrics.interests.rejected, "rose"],
-         ].map(([status, count, color]) => (
-           <div key={status} className="flex items-center justify-between py-1">
-             <Badge label={status as string} color={color as BadgeProps["color"]} />
-             <span className="font-semibold text-gray-900">{count}</span>
-           </div>
-         ))}
+         {
+           [
+             ["new", metrics.interests.new, "indigo"],
+             ["contacted", metrics.interests.contacted, "amber"],
+             ["enrolled", metrics.interests.enrolled, "green"],
+             ["rejected", metrics.interests.rejected, "rose"],
+           ].map(([status, count, color]) => (
+             <div
+               key={status}
+               className="flex items-center justify-between py-1"
+             >
+               <Badge
+                 label={status as string}
+                 color={color as BadgeProps["color"]}
+               />
+               <span className="font-semibold text-gray-900">{count}</span>
+             </div>
+           ));
+         }
          ```
 
     4. **Enrollments** — `icon={<GraduationCap className="w-5 h-5" />}`:
        - 4 badge rows:
          ```tsx
-         {[
-           ["pending", metrics.enrollments.pending, "gray"],
-           ["in_progress", metrics.enrollments.in_progress, "green"],
-           ["achieved", metrics.enrollments.achieved, "green"],
-           ["dropped", metrics.enrollments.dropped, "rose"],
-         ].map(([status, count, color]) => (
-           <div key={status} className="flex items-center justify-between py-1">
-             <Badge label={status as string} color={color as BadgeProps["color"]} />
-             <span className="font-semibold text-gray-900">{count}</span>
-           </div>
-         ))}
+         {
+           [
+             ["pending", metrics.enrollments.pending, "gray"],
+             ["in_progress", metrics.enrollments.in_progress, "green"],
+             ["achieved", metrics.enrollments.achieved, "green"],
+             ["dropped", metrics.enrollments.dropped, "rose"],
+           ].map(([status, count, color]) => (
+             <div
+               key={status}
+               className="flex items-center justify-between py-1"
+             >
+               <Badge
+                 label={status as string}
+                 color={color as BadgeProps["color"]}
+               />
+               <span className="font-semibold text-gray-900">{count}</span>
+             </div>
+           ));
+         }
          ```
 
 - Import `BadgeProps` from `@dotevolve/ui-kit` if needed for the type cast, or use a local `STATUS_COLORS` lookup object to avoid the cast entirely

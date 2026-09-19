@@ -5,17 +5,23 @@
 `src/main.tsx` is the only file that needs to change for the router swap.
 
 **Before:**
+
 ```tsx
 import { BrowserRouter } from "react-router-dom";
 // ...
-<BrowserRouter><App /></BrowserRouter>
+<BrowserRouter>
+  <App />
+</BrowserRouter>;
 ```
 
 **After:**
+
 ```tsx
 import { HashRouter } from "react-router-dom";
 // ...
-<HashRouter><App /></HashRouter>
+<HashRouter>
+  <App />
+</HashRouter>;
 ```
 
 No other files reference the router type. All `<Route>`, `<Link>`, and `useNavigate` usage in `App.tsx` and page components is router-agnostic and requires no changes.
@@ -37,11 +43,13 @@ The `src/lib/` directory already exists (it contains `supabase.ts`). No director
 The file content is identical — no logic changes. The only internal import that might need updating is the `supabase` import:
 
 **Current in `src/api.ts`:**
+
 ```typescript
 import { supabase } from "./lib/supabase";
 ```
 
 **After move to `src/lib/api.ts`:**
+
 ```typescript
 import { supabase } from "./supabase";
 ```
@@ -52,14 +60,14 @@ This is the only content change required inside the file itself — one relative
 
 Every consumer needs its import path updated:
 
-| File | Change |
-|---|---|
-| `src/App.tsx` | `"./api"` → `"./lib/api"` |
-| `src/components/CourseForm.tsx` | `"../api"` → `"../lib/api"` |
-| `src/pages/CoursesList.tsx` | `"../api"` → `"../lib/api"` |
-| `src/pages/Interests.tsx` | `"../api"` → `"../lib/api"` |
-| `src/pages/Enrollments.tsx` | `"../api"` → `"../lib/api"` |
-| `src/hooks/useMetrics.ts` | `"../api"` → `"../lib/api"` |
+| File                             | Change                               |
+| -------------------------------- | ------------------------------------ |
+| `src/App.tsx`                    | `"./api"` → `"./lib/api"`            |
+| `src/components/CourseForm.tsx`  | `"../api"` → `"../lib/api"`          |
+| `src/pages/CoursesList.tsx`      | `"../api"` → `"../lib/api"`          |
+| `src/pages/Interests.tsx`        | `"../api"` → `"../lib/api"`          |
+| `src/pages/Enrollments.tsx`      | `"../api"` → `"../lib/api"`          |
+| `src/hooks/useMetrics.ts`        | `"../api"` → `"../lib/api"`          |
 | `src/pages/Taxonomies.tsx` (new) | imports directly from `"../lib/api"` |
 
 After all imports are updated, `src/api.ts` is deleted.
@@ -91,11 +99,13 @@ The component logic, state, and JSX are moved verbatim — no rewrites.
 ### `App.tsx` after extraction
 
 Additions:
+
 ```typescript
 import Taxonomies from "./pages/Taxonomies";
 ```
 
 Removals:
+
 - `import { getTaxonomies, api } from "./api"` — no longer needed in `App.tsx` (used only by `Taxonomies`)
 - `import type { TaxonomyItem } from "./api"` — no longer needed in `App.tsx`
 - The `function Taxonomies() { ... }` definition
@@ -121,15 +131,15 @@ The three changes are independent but MUST be applied in this order to avoid bro
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `src/main.tsx` | **MODIFY** — `BrowserRouter` → `HashRouter` |
-| `src/lib/api.ts` | **NEW** — moved from `src/api.ts`, supabase import path adjusted |
-| `src/api.ts` | **DELETE** |
-| `src/App.tsx` | **MODIFY** — update import paths, add `Taxonomies` page import, remove inline components |
-| `src/components/CourseForm.tsx` | **MODIFY** — update import path |
-| `src/pages/CoursesList.tsx` | **MODIFY** — update import path |
-| `src/pages/Interests.tsx` | **MODIFY** — update import path |
-| `src/pages/Enrollments.tsx` | **MODIFY** — update import path |
-| `src/hooks/useMetrics.ts` | **MODIFY** — update import path |
-| `src/pages/Taxonomies.tsx` | **NEW** — extracted from `App.tsx` |
+| File                            | Change                                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `src/main.tsx`                  | **MODIFY** — `BrowserRouter` → `HashRouter`                                              |
+| `src/lib/api.ts`                | **NEW** — moved from `src/api.ts`, supabase import path adjusted                         |
+| `src/api.ts`                    | **DELETE**                                                                               |
+| `src/App.tsx`                   | **MODIFY** — update import paths, add `Taxonomies` page import, remove inline components |
+| `src/components/CourseForm.tsx` | **MODIFY** — update import path                                                          |
+| `src/pages/CoursesList.tsx`     | **MODIFY** — update import path                                                          |
+| `src/pages/Interests.tsx`       | **MODIFY** — update import path                                                          |
+| `src/pages/Enrollments.tsx`     | **MODIFY** — update import path                                                          |
+| `src/hooks/useMetrics.ts`       | **MODIFY** — update import path                                                          |
+| `src/pages/Taxonomies.tsx`      | **NEW** — extracted from `App.tsx`                                                       |

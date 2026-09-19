@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, Link, useNavigate, Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+  Navigate,
+  Outlet,
+  useLocation,
+} from "react-router-dom";
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
 import { getMetrics } from "./lib/api";
@@ -15,7 +23,13 @@ import Enquiries from "./pages/Enquiries";
 import TrainingPlanRequests from "./pages/TrainingPlanRequests";
 import { ResetPassword } from "./pages/ResetPassword";
 
-function AuthGuard({ children, session }: { children: React.ReactNode; session: Session | null }) {
+function AuthGuard({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session: Session | null;
+}) {
   if (!session) {
     return <Navigate to="/login" replace />;
   }
@@ -79,7 +93,10 @@ function Layout() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 shadow-sm">
           <h2 className="text-lg font-medium">Administration</h2>
-          <button onClick={handleLogout} className="text-sm font-medium text-gray-600 hover:text-gray-900">
+          <button
+            onClick={handleLogout}
+            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+          >
             Sign out
           </button>
         </header>
@@ -131,9 +148,18 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
+      <Route
+        path="/login"
+        element={session ? <Navigate to="/" replace /> : <Login />}
+      />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<AuthGuard session={session}><Layout /></AuthGuard>}>
+      <Route
+        element={
+          <AuthGuard session={session}>
+            <Layout />
+          </AuthGuard>
+        }
+      >
         <Route path="/" element={<Dashboard />} />
         <Route path="/courses" element={<CoursesList />} />
         <Route path="/courses/new" element={<CourseForm />} />

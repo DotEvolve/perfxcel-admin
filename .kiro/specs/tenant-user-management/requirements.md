@@ -12,11 +12,11 @@ App-specific admin dashboards (`govnix-admin`, `floorix-admin`) must **not** dup
 
 ### Gaps addressed by this spec
 
-| Gap | System(s) affected | Nature |
-|-----|--------------------|--------|
-| Gap 1 | floorix-api, dot-portal-api | Backend: proactive profile sync via webhook |
-| Gap 2 | floorix-admin | Frontend: read/write user management UI scoped to floorix |
-| Gap 3 | govnix-admin | Frontend: scope correction — read-only summary only |
+| Gap   | System(s) affected          | Nature                                                    |
+| ----- | --------------------------- | --------------------------------------------------------- |
+| Gap 1 | floorix-api, dot-portal-api | Backend: proactive profile sync via webhook               |
+| Gap 2 | floorix-admin               | Frontend: read/write user management UI scoped to floorix |
+| Gap 3 | govnix-admin                | Frontend: scope correction — read-only summary only       |
 
 ---
 

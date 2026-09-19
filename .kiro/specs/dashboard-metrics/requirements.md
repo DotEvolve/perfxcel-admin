@@ -79,6 +79,7 @@ The implementation also pays down existing technical debt: extracting inline com
 **REQ-4.1** A `src/hooks/` directory MUST be created.
 
 **REQ-4.2** A `src/hooks/useMetrics.ts` hook MUST be created that:
+
 - Calls `getMetrics()` on mount
 - Returns `{ metrics, loading, error }` state
 - Handles errors gracefully (sets `error` state, does not throw)
@@ -86,6 +87,7 @@ The implementation also pays down existing technical debt: extracting inline com
 **REQ-4.3** The hook MUST be a custom React hook (`useMetrics`) — components must call the hook, not `getMetrics()` directly.
 
 **REQ-4.4** The hook's error catch block MUST extract the backend error message from the Axios response before falling back to the generic message. The priority order is:
+
 1. `err.response.data.message` (API error from `errorHandlerMiddleware`)
 2. `err.message` (Axios network-level message)
 3. Fallback string: `"Failed to load metrics"`
@@ -105,11 +107,13 @@ The implementation also pays down existing technical debt: extracting inline com
 **REQ-5.4** The page MUST display an error message if the fetch fails.
 
 **REQ-5.5** The page MUST render metrics in a responsive grid of summary cards. Each card shows:
+
 - A label (e.g. "Total Courses")
 - The count value prominently
 - For status-grouped metrics (interests, enrollments): each status as a sub-item with a colored badge
 
 **REQ-5.6** Status badge colors MUST follow this convention, using the `Badge` component's available `color` prop values (`gray`, `green`, `amber`, `rose`, `indigo`):
+
 - `new` → `indigo`
 - `contacted` → `amber`
 - `enrolled` / `in_progress` → `green`
@@ -122,6 +126,7 @@ The implementation also pays down existing technical debt: extracting inline com
 **REQ-5.8** The Dashboard page MUST render a "Refresh" button in the page header area. Clicking it MUST call the `refresh` function returned by `useMetrics`. While a refresh is in progress (`loading === true` after a refresh), the button MUST show a loading state (disabled + spinner icon) to prevent double-clicks.
 
 **REQ-5.9** Each `MetricCard` MUST display a relevant Lucide React icon in its header. The icon mapping is:
+
 - Courses → `BookOpen`
 - Taxonomies → `Tags`
 - Interests → `Users`
@@ -142,23 +147,26 @@ Icons MUST be imported from `lucide-react`. They MUST be sized `w-5 h-5` and col
 ### REQ-7: UI Kit Integration
 
 **REQ-7.1** The `@dotevolve/ui-kit` stylesheet MUST be imported in `src/index.css` via:
+
 ```css
 @import "@dotevolve/ui-kit/styles";
 ```
+
 This import MUST appear after the `@import "tailwindcss"` line.
 
 **REQ-7.2** The `Dashboard` page MUST use the following ui-kit components — custom hand-rolled equivalents MUST NOT be created for these:
 
-| Use case | Component | Key props |
-|---|---|---|
-| Metric cards | `Card` | `padding="md"` (default) |
-| Status labels | `Badge` | `label`, `color` |
+| Use case      | Component | Key props                                  |
+| ------------- | --------- | ------------------------------------------ |
+| Metric cards  | `Card`    | `padding="md"` (default)                   |
+| Status labels | `Badge`   | `label`, `color`                           |
 | Loading state | `Spinner` | `size="lg"`, `className="text-indigo-600"` |
-| Error state | `Alert` | `variant="error"`, `message` |
+| Error state   | `Alert`   | `variant="error"`, `message`               |
 
 **REQ-7.3** All imports from ui-kit MUST use the package name: `import { Card, Badge, Spinner, Alert } from "@dotevolve/ui-kit"`. Never import from relative paths into the ui-kit source.
 
 **REQ-7.4** The `Badge` `color` prop MUST map to status values using only the colors the component actually supports (`gray`, `green`, `amber`, `rose`, `indigo`):
+
 - `new` → `indigo`
 - `contacted` → `amber`
 - `enrolled` / `in_progress` / `achieved` → `green`

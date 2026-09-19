@@ -45,7 +45,9 @@ export function useAuditLogs(): UseAuditLogsResult {
       .catch((err) => {
         if (!cancelled) {
           setError(
-            err.response?.data?.message || err.message || "Failed to load audit logs"
+            err.response?.data?.message ||
+              err.message ||
+              "Failed to load audit logs",
           );
           setLoading(false);
         }

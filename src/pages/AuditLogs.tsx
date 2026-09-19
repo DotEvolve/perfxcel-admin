@@ -121,7 +121,10 @@ export default function AuditLogs() {
                 </tr>
               ) : (
                 logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={log.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {new Date(log.createdAt).toLocaleString()}
                     </td>

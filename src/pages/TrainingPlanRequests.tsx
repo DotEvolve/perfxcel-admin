@@ -39,7 +39,9 @@ export default function TrainingPlanRequests() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Training Plan Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Training Plan Requests
+        </h1>
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -93,13 +95,19 @@ export default function TrainingPlanRequests() {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={4}
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
                     Loading requests...
                   </td>
                 </tr>
               ) : requests.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={4}
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
                     No requests found.
                   </td>
                 </tr>
@@ -110,13 +118,23 @@ export default function TrainingPlanRequests() {
                       {new Date(request.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{request.name}</div>
-                      <div className="text-sm text-gray-500">{request.email}</div>
-                      <div className="text-sm text-gray-500">{request.mobile}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {request.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {request.email}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {request.mobile}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{request.company || "-"}</div>
-                      <div className="text-sm text-gray-500">{request.designation || "-"}</div>
+                      <div className="text-sm text-gray-900">
+                        {request.company || "-"}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {request.designation || "-"}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(request.expires_at) < new Date() ? (
@@ -158,7 +176,9 @@ export default function TrainingPlanRequests() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
+                  Showing{" "}
+                  <span className="font-medium">{(page - 1) * limit + 1}</span>{" "}
+                  to{" "}
                   <span className="font-medium">
                     {Math.min(page * limit, total)}
                   </span>{" "}

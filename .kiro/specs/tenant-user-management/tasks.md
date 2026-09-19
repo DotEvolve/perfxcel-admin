@@ -3,6 +3,7 @@
 ## Overview
 
 Implement cross-app tenant user management across four repositories in order:
+
 1. **floorix-api** — webhook endpoint for proactive MongoDB profile sync
 2. **dot-portal-api** — fire-and-forget webhook notification after user provisioning
 3. **floorix-admin** — portalApiClient + TenantUsersTab + FloorixInviteModal + Tenants.tsx wiring
@@ -125,7 +126,8 @@ Each group is self-contained and can be reviewed independently. All property tes
   - After the successful `upsert` and `buildAndWrite` call, add:
     ```ts
     if (appSlug === "floorix") {
-      const { data: targetUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const { data: targetUser } =
+        await supabaseAdmin.auth.admin.getUserById(userId);
       if (targetUser?.user?.email) {
         await notifyFloorix(userId, targetUser.user.email, tenantId);
       }

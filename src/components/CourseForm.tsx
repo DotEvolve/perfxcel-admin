@@ -17,7 +17,9 @@ export default function CourseForm() {
   const [isPublished, setIsPublished] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [isBlended, setIsBlended] = useState(false);
-  const [courseStatus, setCourseStatus] = useState<'active' | 'archived'>('active');
+  const [courseStatus, setCourseStatus] = useState<"active" | "archived">(
+    "active",
+  );
   const [shortCode, setShortCode] = useState("");
   const [cost, setCost] = useState<number | "">("");
   const [duration, setDuration] = useState("");
@@ -58,14 +60,16 @@ export default function CourseForm() {
           setIsPublished(course.is_published);
           setIsPublic(course.is_public || false);
           setIsBlended(course.is_blended || false);
-          setCourseStatus((course.status as 'active' | 'archived') || 'active');
+          setCourseStatus((course.status as "active" | "archived") || "active");
           setShortCode(course.short_code || "");
           setCost(course.cost ?? "");
           setDuration(course.duration || "");
           setCategoryIds(course.categories?.map((c: any) => c.id) || []);
           setCityIds(course.cities?.map((c: any) => c.id) || []);
           setAssociationIds(course.associations?.map((c: any) => c.id) || []);
-          setDeliveryModeIds(course.delivery_modes?.map((c: any) => c.id) || []);
+          setDeliveryModeIds(
+            course.delivery_modes?.map((c: any) => c.id) || [],
+          );
           setSchedules(course.course_schedules || []);
           setImageUrl(course.image_url || null);
         })
@@ -73,15 +77,18 @@ export default function CourseForm() {
     }
   }, [id, isEdit]);
 
-  const handleSelectMultiple = (e: React.ChangeEvent<HTMLSelectElement>, setter: (val: string[]) => void) => {
+  const handleSelectMultiple = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+    setter: (val: string[]) => void,
+  ) => {
     const options = Array.from(e.target.selectedOptions);
-    setter(options.map(o => o.value));
+    setter(options.map((o) => o.value));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     if (file.type !== "image/jpeg") {
       setImageError("Only JPG images are allowed.");
       return;
@@ -90,7 +97,7 @@ export default function CourseForm() {
       setImageError("Image size must be less than 1MB.");
       return;
     }
-    
+
     setImageError(null);
     setImageFile(file);
     const reader = new FileReader();
@@ -99,10 +106,23 @@ export default function CourseForm() {
   };
 
   const addSchedule = () => {
-    setSchedules([...schedules, { start_date: "", end_date: "", location: "", method: "", status: "open" }]);
+    setSchedules([
+      ...schedules,
+      {
+        start_date: "",
+        end_date: "",
+        location: "",
+        method: "",
+        status: "open",
+      },
+    ]);
   };
 
-  const updateSchedule = (index: number, field: keyof CourseSchedule, value: string) => {
+  const updateSchedule = (
+    index: number,
+    field: keyof CourseSchedule,
+    value: string,
+  ) => {
     const updated = [...schedules];
     updated[index] = { ...updated[index], [field]: value };
     setSchedules(updated);
@@ -146,22 +166,28 @@ export default function CourseForm() {
       if (imageFile && savedCourse.short_code) {
         const { supabase } = await import("../lib/supabase");
         const filename = `${savedCourse.short_code.toLowerCase()}.jpg`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from("course-images")
-          .upload(filename, imageFile, { upsert: true, contentType: "image/jpeg" });
-          
+          .upload(filename, imageFile, {
+            upsert: true,
+            contentType: "image/jpeg",
+          });
+
         if (uploadError) {
           throw new Error("Image upload failed: " + uploadError.message);
         }
-        
+
         const { data: publicUrlData } = supabase.storage
           .from("course-images")
           .getPublicUrl(filename);
-          
+
         // Re-update course with the image URL if it's the first time
         if (savedCourse.image_url !== publicUrlData.publicUrl) {
-          await updateCourse(savedCourse.id, { ...payload, image_url: publicUrlData.publicUrl });
+          await updateCourse(savedCourse.id, {
+            ...payload,
+            image_url: publicUrlData.publicUrl,
+          });
         }
       }
 
@@ -194,18 +220,23 @@ export default function CourseForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow rounded-lg p-6 space-y-8">
+        className="bg-white shadow rounded-lg p-6 space-y-8"
+      >
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Basic Info</h4>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Course Code
             </label>
-            <input value={shortCode}
-                   onChange={(e) => setShortCode(e.target.value)}
-                   placeholder="e.g. PX-LEAD-001"
-                   className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm" />
-            <p className="mt-1 text-xs text-gray-500">Used as the image filename in storage. Leave blank to auto-assign.</p>
+            <input
+              value={shortCode}
+              onChange={(e) => setShortCode(e.target.value)}
+              placeholder="e.g. PX-LEAD-001"
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Used as the image filename in storage. Leave blank to auto-assign.
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -218,7 +249,12 @@ export default function CourseForm() {
               onChange={(e) => {
                 setTitle(e.target.value);
                 if (!isEdit && !slugTouched) {
-                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                  setSlug(
+                    e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                      .replace(/(^-|-$)+/g, ""),
+                  );
                 }
               }}
               className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -252,22 +288,29 @@ export default function CourseForm() {
                   onChange={handleImageChange}
                   className="w-full border border-gray-300 rounded-md p-2 text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">Only JPG format. Max size 1MB.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Only JPG format. Max size 1MB.
+                </p>
                 {imageError && (
                   <p className="mt-1 text-sm text-red-600">{imageError}</p>
                 )}
                 {imageUploadError && (
-                  <p className="mt-1 text-sm text-red-600">{imageUploadError}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {imageUploadError}
+                  </p>
                 )}
               </div>
               {imageUrl && (
                 <div className="w-32 h-24 relative rounded-md border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
-                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                  <img
+                    src={imageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
             </div>
           </div>
-
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -308,41 +351,106 @@ export default function CourseForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cost</label>
-              <input type="number" step="0.01" value={cost} onChange={e => setCost(e.target.value ? Number(e.target.value) : "")} className="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 500.00" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cost
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={(e) =>
+                  setCost(e.target.value ? Number(e.target.value) : "")
+                }
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="e.g. 500.00"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
-              <input type="text" value={duration} onChange={e => setDuration(e.target.value)} className="w-full border border-gray-300 rounded-md p-2" placeholder="e.g. 3 Months" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Duration
+              </label>
+              <input
+                type="text"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-2"
+                placeholder="e.g. 3 Months"
+              />
             </div>
           </div>
         </section>
 
         <section className="space-y-4">
-          <h4 className="font-medium text-lg border-b pb-2">Taxonomies (Hold Cmd/Ctrl to select multiple)</h4>
+          <h4 className="font-medium text-lg border-b pb-2">
+            Taxonomies (Hold Cmd/Ctrl to select multiple)
+          </h4>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
-              <select multiple value={categoryIds} onChange={e => handleSelectMultiple(e, setCategoryIds)} className="w-full h-32 border border-gray-300 rounded-md p-2">
-                {taxonomies.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Categories
+              </label>
+              <select
+                multiple
+                value={categoryIds}
+                onChange={(e) => handleSelectMultiple(e, setCategoryIds)}
+                className="w-full h-32 border border-gray-300 rounded-md p-2"
+              >
+                {taxonomies.categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cities</label>
-              <select multiple value={cityIds} onChange={e => handleSelectMultiple(e, setCityIds)} className="w-full h-32 border border-gray-300 rounded-md p-2">
-                {taxonomies.cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cities
+              </label>
+              <select
+                multiple
+                value={cityIds}
+                onChange={(e) => handleSelectMultiple(e, setCityIds)}
+                className="w-full h-32 border border-gray-300 rounded-md p-2"
+              >
+                {taxonomies.cities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Associations</label>
-              <select multiple value={associationIds} onChange={e => handleSelectMultiple(e, setAssociationIds)} className="w-full h-32 border border-gray-300 rounded-md p-2">
-                {taxonomies.associations.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Associations
+              </label>
+              <select
+                multiple
+                value={associationIds}
+                onChange={(e) => handleSelectMultiple(e, setAssociationIds)}
+                className="w-full h-32 border border-gray-300 rounded-md p-2"
+              >
+                {taxonomies.associations.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Modes</label>
-              <select multiple value={deliveryModeIds} onChange={e => handleSelectMultiple(e, setDeliveryModeIds)} className="w-full h-32 border border-gray-300 rounded-md p-2">
-                {taxonomies.delivery_modes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Delivery Modes
+              </label>
+              <select
+                multiple
+                value={deliveryModeIds}
+                onChange={(e) => handleSelectMultiple(e, setDeliveryModeIds)}
+                className="w-full h-32 border border-gray-300 rounded-md p-2"
+              >
+                {taxonomies.delivery_modes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -351,26 +459,80 @@ export default function CourseForm() {
         <section className="space-y-4">
           <div className="flex justify-between items-center border-b pb-2">
             <h4 className="font-medium text-lg">Schedules</h4>
-            <button type="button" onClick={addSchedule} className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200">+ Add Schedule</button>
+            <button
+              type="button"
+              onClick={addSchedule}
+              className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+            >
+              + Add Schedule
+            </button>
           </div>
           {schedules.length === 0 ? (
             <p className="text-gray-500 text-sm">No schedules added.</p>
           ) : (
             <div className="space-y-3">
               {schedules.map((schedule, i) => (
-                <div key={i} className="flex gap-2 items-center bg-gray-50 p-2 rounded">
-                  <input type="date" required value={schedule.start_date.split('T')[0]} onChange={e => updateSchedule(i, "start_date", e.target.value)} className="border p-1 rounded text-sm w-full" placeholder="Start Date" />
-                  <input type="date" value={schedule.end_date?.split('T')[0] || ""} onChange={e => updateSchedule(i, "end_date", e.target.value)} className="border p-1 rounded text-sm w-full" placeholder="End Date" />
-                  <input type="text" value={schedule.location || ""} onChange={e => updateSchedule(i, "location", e.target.value)} className="border p-1 rounded text-sm w-full" placeholder="Location" />
-                  <input type="text" value={schedule.method || ""} onChange={e => updateSchedule(i, "method", e.target.value)} className="border p-1 rounded text-sm w-full" placeholder="Method" />
-                  <select value={schedule.status} onChange={e => updateSchedule(i, "status", e.target.value)} className="border p-1 rounded text-sm w-full">
+                <div
+                  key={i}
+                  className="flex gap-2 items-center bg-gray-50 p-2 rounded"
+                >
+                  <input
+                    type="date"
+                    required
+                    value={schedule.start_date.split("T")[0]}
+                    onChange={(e) =>
+                      updateSchedule(i, "start_date", e.target.value)
+                    }
+                    className="border p-1 rounded text-sm w-full"
+                    placeholder="Start Date"
+                  />
+                  <input
+                    type="date"
+                    value={schedule.end_date?.split("T")[0] || ""}
+                    onChange={(e) =>
+                      updateSchedule(i, "end_date", e.target.value)
+                    }
+                    className="border p-1 rounded text-sm w-full"
+                    placeholder="End Date"
+                  />
+                  <input
+                    type="text"
+                    value={schedule.location || ""}
+                    onChange={(e) =>
+                      updateSchedule(i, "location", e.target.value)
+                    }
+                    className="border p-1 rounded text-sm w-full"
+                    placeholder="Location"
+                  />
+                  <input
+                    type="text"
+                    value={schedule.method || ""}
+                    onChange={(e) =>
+                      updateSchedule(i, "method", e.target.value)
+                    }
+                    className="border p-1 rounded text-sm w-full"
+                    placeholder="Method"
+                  />
+                  <select
+                    value={schedule.status}
+                    onChange={(e) =>
+                      updateSchedule(i, "status", e.target.value)
+                    }
+                    className="border p-1 rounded text-sm w-full"
+                  >
                     <option value="open">Open</option>
                     <option value="guaranteed">Guaranteed</option>
                     <option value="filling_fast">Filling Fast</option>
                     <option value="closed">Closed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
-                  <button type="button" onClick={() => removeSchedule(i)} className="text-red-500 hover:text-red-700 px-2">&times;</button>
+                  <button
+                    type="button"
+                    onClick={() => removeSchedule(i)}
+                    className="text-red-500 hover:text-red-700 px-2"
+                  >
+                    &times;
+                  </button>
                 </div>
               ))}
             </div>
@@ -394,7 +556,7 @@ export default function CourseForm() {
                 Published
               </label>
             </div>
-            
+
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -435,7 +597,9 @@ export default function CourseForm() {
               </label>
               <select
                 value={courseStatus}
-                onChange={e => setCourseStatus(e.target.value as 'active' | 'archived')}
+                onChange={(e) =>
+                  setCourseStatus(e.target.value as "active" | "archived")
+                }
                 className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               >
                 <option value="active">Active</option>

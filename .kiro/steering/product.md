@@ -21,18 +21,18 @@ Internal DotEvolve super admins only. Authentication is via Supabase Auth with S
 
 ## Tech Stack
 
-| Concern | Library |
-|---|---|
-| Framework | React 19 + TypeScript 5.9 |
-| Router | react-router-dom v7 (`BrowserRouter` via `main.tsx`) |
-| Styling | Tailwind CSS v4 via `@tailwindcss/vite` |
-| HTTP | axios — centralised in `src/lib/api.ts` |
-| Auth | `@supabase/supabase-js` — singleton in `src/lib/supabase.ts` |
-| Build | Vite 8 |
-| Testing | Vitest 4 + jsdom + `@testing-library/react` + `fast-check` |
-| Error tracking | `@dotevolve/error-utils` (wraps Sentry) |
-| UI Kit | `@dotevolve/ui-kit` |
-| Drag-and-drop | `@dnd-kit/core`, `@dnd-kit/sortable` |
+| Concern        | Library                                                      |
+| -------------- | ------------------------------------------------------------ |
+| Framework      | React 19 + TypeScript 5.9                                    |
+| Router         | react-router-dom v7 (`BrowserRouter` via `main.tsx`)         |
+| Styling        | Tailwind CSS v4 via `@tailwindcss/vite`                      |
+| HTTP           | axios — centralised in `src/lib/api.ts`                      |
+| Auth           | `@supabase/supabase-js` — singleton in `src/lib/supabase.ts` |
+| Build          | Vite 8                                                       |
+| Testing        | Vitest 4 + jsdom + `@testing-library/react` + `fast-check`   |
+| Error tracking | `@dotevolve/error-utils` (wraps Sentry)                      |
+| UI Kit         | `@dotevolve/ui-kit`                                          |
+| Drag-and-drop  | `@dnd-kit/core`, `@dnd-kit/sortable`                         |
 
 ## Deployment
 

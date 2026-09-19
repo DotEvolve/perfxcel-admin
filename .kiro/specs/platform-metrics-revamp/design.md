@@ -5,6 +5,7 @@
 The PlatformMetrics page currently displays hardcoded/static infrastructure data instead of real-time metrics from Heroku. This bugfix implements a complete dynamic revamp by creating a new `/infra` endpoint in the API Gateway that fetches real Heroku metrics via the Heroku Platform API. The fix will enable administrators to monitor actual platform health, resource utilization, dyno status, and comprehensive infrastructure information in real-time.
 
 The approach involves:
+
 1. Adding a new `/infra` endpoint to the API Gateway
 2. Integrating with Heroku Platform API using OAuth tokens
 3. Fetching dyno metrics, app details, and formation information
@@ -29,11 +30,12 @@ The approach involves:
 The bug manifests when the PlatformMetrics page loads and attempts to fetch infrastructure data from the `/infra` endpoint. The endpoint either returns no data, static placeholder data, or is not properly implemented to fetch real-time metrics from Heroku Platform API.
 
 **Formal Specification:**
+
 ```
 FUNCTION isBugCondition(request)
   INPUT: request of type HTTPRequest to /infra endpoint
   OUTPUT: boolean
-  
+
   RETURN request.endpoint == "/infra"
          AND (response.data == null OR response.data == staticData OR NOT fetchedFromHeroku(response.data))
          AND NOT containsRealTimeDynoMetrics(response.data)
@@ -41,7 +43,6 @@ END FUNCTION
 ```
 
 ### Examples
-
 
 - **Example 1**: User loads PlatformMetrics page → `/infra` endpoint returns `null` or empty array → Infrastructure Stack table shows "Loading infrastructure details..." indefinitely
 - **Example 2**: User loads PlatformMetrics page → `/infra` endpoint returns hardcoded data `[{component: "API Gateway", provider: "Heroku", region: "us-east-1", type: "Web"}]` → Data never changes on refresh, doesn't reflect actual Heroku state
@@ -53,6 +54,7 @@ END FUNCTION
 ### Preservation Requirements
 
 **Unchanged Behaviors:**
+
 - Service health checks for API Gateway, Workflow Service, Database, and Document Storage must continue to work exactly as before
 - The `checkHealth()` function must continue to test endpoints and measure response times
 - The 30-second auto-refresh interval for service health checks must remain unchanged
@@ -63,6 +65,7 @@ END FUNCTION
 
 **Scope:**
 All functionality that does NOT involve the Infrastructure Stack table should be completely unaffected by this fix. This includes:
+
 - Service health monitoring cards and their status indicators
 - Response time measurements and display
 - Overall status banner logic
@@ -84,7 +87,6 @@ Based on the bug description and code analysis, the most likely issues are:
 3. **Missing Environment Variables**: The API Gateway lacks Heroku API credentials (OAuth token or API key) in environment configuration, preventing authentication with Heroku Platform API
 
 4. **Data Transformation Gap**: Even if Heroku data is fetched, there may be no logic to transform the Heroku API response format into the `InfraDetail` interface expected by the frontend
-
 
 ## Correctness Properties
 
@@ -152,10 +154,10 @@ Assuming our root cause analysis is correct:
    - Return cached data if available and not expired
    - This aligns with the frontend's 30-second auto-refresh
 
-
 **File**: `govnix-api-gateway/.env.example`
 
 **Changes**: Add Heroku API configuration section
+
 ```
 # ─────────────────────────────────────────────
 # Heroku Platform API Configuration (REQUIRED for /infra endpoint)
@@ -188,12 +190,14 @@ The testing strategy follows a two-phase approach: first, surface counterexample
 **Test Plan**: Write tests that call the `/infra` endpoint and assert that it returns real-time Heroku data. Run these tests on the UNFIXED code to observe failures and understand the root cause.
 
 **Test Cases**:
+
 1. **Endpoint Existence Test**: Call `GET /infra` endpoint (will fail with 404 on unfixed code if endpoint doesn't exist)
 2. **Static Data Test**: Call `/infra` endpoint twice with 5-second delay, verify data changes if Heroku state changes (will fail on unfixed code if returning static data)
 3. **Heroku API Integration Test**: Mock Heroku API, call `/infra`, verify it attempts to fetch from Heroku API (will fail on unfixed code if no integration exists)
 4. **Data Format Test**: Call `/infra`, verify response matches `{ data: InfraDetail[] }` format with real Heroku fields (will fail on unfixed code if data is null or wrong format)
 
 **Expected Counterexamples**:
+
 - Endpoint returns 404 Not Found
 - Endpoint returns null or empty data
 - Endpoint returns hardcoded static data that never changes
@@ -205,6 +209,7 @@ The testing strategy follows a two-phase approach: first, surface counterexample
 **Goal**: Verify that for all inputs where the bug condition holds (requests to `/infra` endpoint), the fixed function produces the expected behavior (returns real-time Heroku data).
 
 **Pseudocode:**
+
 ```
 FOR ALL request WHERE isBugCondition(request) DO
   response := infraEndpoint_fixed(request)
@@ -215,12 +220,12 @@ FOR ALL request WHERE isBugCondition(request) DO
 END FOR
 ```
 
-
 ### Preservation Checking
 
 **Goal**: Verify that for all inputs where the bug condition does NOT hold (service health checks, other API endpoints, UI interactions), the fixed function produces the same result as the original function.
 
 **Pseudocode:**
+
 ```
 FOR ALL request WHERE NOT isBugCondition(request) DO
   ASSERT originalBehavior(request) = fixedBehavior(request)
@@ -228,6 +233,7 @@ END FOR
 ```
 
 **Testing Approach**: Property-based testing is recommended for preservation checking because:
+
 - It generates many test cases automatically across the input domain
 - It catches edge cases that manual unit tests might miss
 - It provides strong guarantees that behavior is unchanged for all non-buggy inputs
@@ -235,6 +241,7 @@ END FOR
 **Test Plan**: Observe behavior on UNFIXED code first for service health checks and other functionality, then write property-based tests capturing that behavior.
 
 **Test Cases**:
+
 1. **Service Health Check Preservation**: Observe that health checks for API Gateway, Workflow Service, Database, and Document Storage work correctly on unfixed code, then write tests to verify this continues after fix
 2. **Response Time Measurement Preservation**: Observe that response times are measured and displayed correctly on unfixed code, then write tests to verify this continues after fix
 3. **Auto-Refresh Preservation**: Observe that 30-second auto-refresh works correctly on unfixed code, then write tests to verify this continues after fix

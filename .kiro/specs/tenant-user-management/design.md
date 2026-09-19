@@ -80,17 +80,18 @@ exports.handleUserProvisioned = asyncHandler(async (req, res) => { ... });
 ```
 
 **Request contract:**
+
 - Header: `x-service-webhook-secret: <SERVICE_WEBHOOK_SECRET>`
 - Body: `{ userId: string, email: string, tenantId: string }`
 
 **Response contract:**
 
-| Condition | Status | Body |
-|-----------|--------|------|
-| Bad/missing secret | 401 | `{ status: "error", message: "Unauthorized" }` |
-| Missing field | 400 | `{ status: "error", message: "..." }` |
-| Profile_Doc created | 201 | `{ status: "ok" }` |
-| Profile_Doc already exists | 200 | `{ status: "ok", message: "already exists" }` |
+| Condition                  | Status | Body                                           |
+| -------------------------- | ------ | ---------------------------------------------- |
+| Bad/missing secret         | 401    | `{ status: "error", message: "Unauthorized" }` |
+| Missing field              | 400    | `{ status: "error", message: "..." }`          |
+| Profile_Doc created        | 201    | `{ status: "ok" }`                             |
+| Profile_Doc already exists | 200    | `{ status: "ok", message: "already exists" }`  |
 
 **Idempotency guard:** uses `User.findOne({ supabaseId: userId }).setOptions({ skipTenantFilter: true })` — same pattern as `handleUserCreated`.
 
@@ -100,7 +101,7 @@ exports.handleUserProvisioned = asyncHandler(async (req, res) => { ... });
 
 ```js
 // New line alongside existing route
-router.post('/user-provisioned', webhookController.handleUserProvisioned);
+router.post("/user-provisioned", webhookController.handleUserProvisioned);
 ```
 
 ---
@@ -114,7 +115,7 @@ export async function notifyFloorix(
   userId: string,
   email: string,
   tenantId: string,
-): Promise<void>
+): Promise<void>;
 ```
 
 - POSTs to `${process.env.FOOT_FACTORY_API_URL}/api/v1/webhooks/user-provisioned`
@@ -138,7 +139,8 @@ if (apps.includes("floorix")) {
 
 ```ts
 if (appSlug === "floorix") {
-  const { data: targetUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const { data: targetUser } =
+    await supabaseAdmin.auth.admin.getUserById(userId);
   if (targetUser?.user?.email) {
     await notifyFloorix(userId, targetUser.user.email, tenantId);
   }
@@ -154,6 +156,7 @@ The `notifyFloorix` call is always fire-and-forget; errors are swallowed inside 
 New file: `src/lib/portalApi.ts`
 
 Mirrors `src/lib/axios.ts` exactly, with two differences:
+
 - `baseURL` = `import.meta.env.VITE_PORTAL_API_URL ?? "https://portal-api.dotevolve.net"`
 - The 401 refresh path reuses `apiClient` (the existing floorix-api Axios instance) to call `/auth/refresh`, then retries the original portal-api request with the new token
 
@@ -186,6 +189,7 @@ interface TenantUsersTabProps {
 ```
 
 **Internal state:**
+
 - `users: UserRow[]` — filtered to `app_slug === "floorix"`
 - `loading: boolean`
 - `error: string | null`
@@ -193,28 +197,31 @@ interface TenantUsersTabProps {
 - `showInviteModal: boolean`
 
 **`UserRow` type:**
+
 ```ts
 interface UserRow {
   userId: string;
-  email?: string;   // resolved from roles or a future enrichment endpoint
-  role: string;     // the role for app_slug === "floorix"
+  email?: string; // resolved from roles or a future enrichment endpoint
+  role: string; // the role for app_slug === "floorix"
 }
 ```
 
 > Note: `GET /api/v1/tenants/:tenantId/users` currently returns `{ userId, roles[] }` without email. The component will display `userId` as a fallback if email is absent, consistent with the existing `UserTable` in `dot-admin` which resolves email separately via `useUsers` hook. If the portal-api response is extended to include email in a future iteration, the component will pick it up automatically.
 
 **API calls (all via `portalApiClient`):**
+
 - Fetch: `GET /api/v1/tenants/:tenantId/users`
 - Invite: `POST /api/v1/tenants/:tenantId/users/invite`
 - Revoke: `DELETE /api/v1/tenants/:tenantId/users/:userId/apps/floorix`
 
 **Filtering logic:**
+
 ```ts
 const floorixUsers = (data.users ?? [])
-  .filter(u => u.roles.some(r => r.appSlug === "floorix"))
-  .map(u => ({
+  .filter((u) => u.roles.some((r) => r.appSlug === "floorix"))
+  .map((u) => ({
     userId: u.userId,
-    role: u.roles.find(r => r.appSlug === "floorix")!.role,
+    role: u.roles.find((r) => r.appSlug === "floorix")!.role,
   }));
 ```
 
@@ -265,13 +272,15 @@ interface UserSummarySectionProps {
 **API call:** `GET /api/v1/tenants/:tenantId/users` via `adminApi` (existing Axios instance in `src/lib/adminApi.ts` — same-origin, attaches Supabase JWT via `supabase.auth.getSession()`).
 
 **Count logic:**
+
 ```ts
-const count = (data.users ?? [])
-  .filter(u => u.roles.some((r: { appSlug: string }) => r.appSlug === "govnix"))
-  .length;
+const count = (data.users ?? []).filter((u) =>
+  u.roles.some((r: { appSlug: string }) => r.appSlug === "govnix"),
+).length;
 ```
 
 **Rendered output:**
+
 - Loading: spinner
 - Error: inline error message (no count)
 - Success: `"X users with govnix access"` + `"Manage Users in Dot Admin"` link (`href="https://admin.dotevolve.net"`, `target="_blank"`, `rel="noopener noreferrer"`)
@@ -298,13 +307,13 @@ Remove any imports/usages of `UserService`, `InviteUserModal`, or `TenantUserMan
 
 Fields written by `handleUserProvisioned`:
 
-| Field | Value |
-|-------|-------|
-| `supabaseId` | `userId` from webhook body |
-| `email` | `email` from webhook body (lowercased by schema) |
-| `name` | `email` (same as existing `handleUserCreated` pattern) |
-| `username` | `email.toLowerCase()` |
-| `tenantId` | `tenantId` from webhook body |
+| Field        | Value                                                  |
+| ------------ | ------------------------------------------------------ |
+| `supabaseId` | `userId` from webhook body                             |
+| `email`      | `email` from webhook body (lowercased by schema)       |
+| `name`       | `email` (same as existing `handleUserCreated` pattern) |
+| `username`   | `email.toLowerCase()`                                  |
+| `tenantId`   | `tenantId` from webhook body                           |
 
 The `role` field defaults to `"user"` (schema default). No other fields are set.
 
@@ -332,11 +341,11 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: Webhook secret rejection
 
-*For any* string value of the `x-service-webhook-secret` header that is not equal to `SERVICE_WEBHOOK_SECRET` (including absent/empty), the `handleUserProvisioned` handler SHALL return HTTP 401 and the MongoDB Profile_Doc collection SHALL be unchanged.
+_For any_ string value of the `x-service-webhook-secret` header that is not equal to `SERVICE_WEBHOOK_SECRET` (including absent/empty), the `handleUserProvisioned` handler SHALL return HTTP 401 and the MongoDB Profile_Doc collection SHALL be unchanged.
 
 **Validates: Requirements 1.2, 1.3, 6.1**
 
@@ -344,7 +353,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 2: Missing-field rejection
 
-*For any* authenticated webhook request whose body is missing at least one of `userId`, `email`, or `tenantId`, the `handleUserProvisioned` handler SHALL return HTTP 400 and the MongoDB Profile_Doc collection SHALL be unchanged.
+_For any_ authenticated webhook request whose body is missing at least one of `userId`, `email`, or `tenantId`, the `handleUserProvisioned` handler SHALL return HTTP 400 and the MongoDB Profile_Doc collection SHALL be unchanged.
 
 **Validates: Requirements 1.5**
 
@@ -352,7 +361,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 3: Profile_Doc creation correctness
 
-*For any* valid triple `(userId, email, tenantId)` where no Profile_Doc with `supabaseId === userId` exists, a successful call to `handleUserProvisioned` SHALL create exactly one Profile_Doc with `supabaseId === userId`, `email === email.toLowerCase()`, `name === email`, `username === email.toLowerCase()`, and `tenantId === tenantId`.
+_For any_ valid triple `(userId, email, tenantId)` where no Profile_Doc with `supabaseId === userId` exists, a successful call to `handleUserProvisioned` SHALL create exactly one Profile_Doc with `supabaseId === userId`, `email === email.toLowerCase()`, `name === email`, `username === email.toLowerCase()`, and `tenantId === tenantId`.
 
 **Validates: Requirements 1.6, 1.8**
 
@@ -360,7 +369,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 4: Webhook idempotency
 
-*For any* valid webhook payload `{ userId, email, tenantId }`, calling `handleUserProvisioned` twice SHALL produce the same Profile_Doc state as calling it once. The second call SHALL return HTTP 200 with `message: "already exists"`, and the count of Profile_Docs with `supabaseId === userId` SHALL equal 1.
+_For any_ valid webhook payload `{ userId, email, tenantId }`, calling `handleUserProvisioned` twice SHALL produce the same Profile_Doc state as calling it once. The second call SHALL return HTTP 200 with `message: "already exists"`, and the count of Profile_Docs with `supabaseId === userId` SHALL equal 1.
 
 **Validates: Requirements 1.7**
 
@@ -368,7 +377,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 5: notifyFloorix fire-and-forget
 
-*For any* error thrown or rejection returned by the outgoing HTTP call inside `notifyFloorix`, the function SHALL catch the error, log it, and resolve without throwing. The caller (`inviteUser` or `grantAppAccess`) SHALL complete successfully regardless of the webhook outcome.
+_For any_ error thrown or rejection returned by the outgoing HTTP call inside `notifyFloorix`, the function SHALL catch the error, log it, and resolve without throwing. The caller (`inviteUser` or `grantAppAccess`) SHALL complete successfully regardless of the webhook outcome.
 
 **Validates: Requirements 2.4**
 
@@ -376,7 +385,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 6: Foot-factory webhook triggered on invite
 
-*For any* `inviteUser` call where the `apps` array contains `"floorix"`, `notifyFloorix` SHALL be called exactly once with the invited user's `userId`, `email`, and the request's `tenantId`. For any `inviteUser` call where `apps` does not contain `"floorix"`, `notifyFloorix` SHALL NOT be called.
+_For any_ `inviteUser` call where the `apps` array contains `"floorix"`, `notifyFloorix` SHALL be called exactly once with the invited user's `userId`, `email`, and the request's `tenantId`. For any `inviteUser` call where `apps` does not contain `"floorix"`, `notifyFloorix` SHALL NOT be called.
 
 **Validates: Requirements 2.1, 2.6**
 
@@ -384,7 +393,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 7: Foot-factory webhook triggered on grant
 
-*For any* `grantAppAccess` call where `appSlug === "floorix"`, `notifyFloorix` SHALL be called exactly once with the target user's `userId`, resolved `email`, and `tenantId`. For any `grantAppAccess` call where `appSlug !== "floorix"`, `notifyFloorix` SHALL NOT be called.
+_For any_ `grantAppAccess` call where `appSlug === "floorix"`, `notifyFloorix` SHALL be called exactly once with the target user's `userId`, resolved `email`, and `tenantId`. For any `grantAppAccess` call where `appSlug !== "floorix"`, `notifyFloorix` SHALL NOT be called.
 
 **Validates: Requirements 2.2, 2.6**
 
@@ -392,7 +401,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 8: portalApiClient JWT attachment
 
-*For any* value of `auth_token` stored in `localStorage`, every HTTP request made via `portalApiClient` SHALL include an `Authorization: Bearer <auth_token>` header.
+_For any_ value of `auth_token` stored in `localStorage`, every HTTP request made via `portalApiClient` SHALL include an `Authorization: Bearer <auth_token>` header.
 
 **Validates: Requirements 4.2, 6.3**
 
@@ -400,7 +409,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 9: TenantUsersTab floorix filter invariant
 
-*For any* user list returned by `GET /api/v1/tenants/:tenantId/users`, the set of users rendered by `TenantUsersTab` SHALL be a subset of the API response, and every rendered user SHALL have at least one role entry with `appSlug === "floorix"`.
+_For any_ user list returned by `GET /api/v1/tenants/:tenantId/users`, the set of users rendered by `TenantUsersTab` SHALL be a subset of the API response, and every rendered user SHALL have at least one role entry with `appSlug === "floorix"`.
 
 **Validates: Requirements 3.4, 3.5**
 
@@ -408,7 +417,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 10: Optimistic revoke removes user from view
 
-*For any* user currently displayed in `TenantUsersTab`, after a successful `DELETE .../apps/floorix` response for that user, the user SHALL NOT appear in the rendered list.
+_For any_ user currently displayed in `TenantUsersTab`, after a successful `DELETE .../apps/floorix` response for that user, the user SHALL NOT appear in the rendered list.
 
 **Validates: Requirements 3.16**
 
@@ -416,7 +425,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 11: Invite always includes floorix app
 
-*For any* valid `(email, role)` pair submitted via `FloorixInviteModal`, the POST body sent to `POST /api/v1/tenants/:tenantId/users/invite` SHALL always include `apps: ["floorix"]`.
+_For any_ valid `(email, role)` pair submitted via `FloorixInviteModal`, the POST body sent to `POST /api/v1/tenants/:tenantId/users/invite` SHALL always include `apps: ["floorix"]`.
 
 **Validates: Requirements 3.11**
 
@@ -424,7 +433,7 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### Property 12: UserSummarySection govnix count invariant
 
-*For any* user list returned by `GET /api/v1/tenants/:tenantId/users`, the count displayed by `UserSummarySection` SHALL equal the number of users in the response whose `roles` array contains at least one entry with `appSlug === "govnix"`.
+_For any_ user list returned by `GET /api/v1/tenants/:tenantId/users`, the count displayed by `UserSummarySection` SHALL equal the number of users in the response whose `roles` array contains at least one entry with `appSlug === "govnix"`.
 
 **Validates: Requirements 5.4**
 
@@ -434,11 +443,11 @@ This is the existing shape from `listTenantUsers` in `userController.ts`. No cha
 
 ### floorix-api — `handleUserProvisioned`
 
-| Error | Handling |
-|-------|----------|
+| Error                                    | Handling                                                                |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
 | Wrong/missing `x-service-webhook-secret` | `throw new AppError('Unauthorized', 401)` — same as `handleUserCreated` |
-| Missing `userId`, `email`, or `tenantId` | `throw new AppError('Invalid payload: missing ...', 400)` |
-| MongoDB write failure | Propagated to `asyncHandler` → global error handler returns 500 |
+| Missing `userId`, `email`, or `tenantId` | `throw new AppError('Invalid payload: missing ...', 400)`               |
+| MongoDB write failure                    | Propagated to `asyncHandler` → global error handler returns 500         |
 
 ### dot-portal-api — `notifyFloorix`
 
@@ -446,20 +455,20 @@ All errors (network, non-2xx response, timeout) are caught inside the utility an
 
 ### floorix-admin — `TenantUsersTab`
 
-| Error | Handling |
-|-------|----------|
-| Fetch error (any status) | Set `error` state, render inline error banner + Retry button |
+| Error                     | Handling                                                                                             |
+| ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Fetch error (any status)  | Set `error` state, render inline error banner + Retry button                                         |
 | 401 / 403 from portal-api | `portalApiClient` interceptor handles 401 (refresh + retry); 403 surfaces as an inline error message |
-| Revoke error | Set `actionError` state, render inline error; leave list unchanged |
-| Invite error | `FloorixInviteModal` sets its own `error` state, renders inline |
-| 5xx | Captured to Sentry by `portalApiClient` response interceptor |
+| Revoke error              | Set `actionError` state, render inline error; leave list unchanged                                   |
+| Invite error              | `FloorixInviteModal` sets its own `error` state, renders inline                                      |
+| 5xx                       | Captured to Sentry by `portalApiClient` response interceptor                                         |
 
 ### govnix-admin — `UserSummarySection`
 
-| Error | Handling |
-|-------|----------|
+| Error                    | Handling                                                             |
+| ------------------------ | -------------------------------------------------------------------- |
 | Fetch error (any status) | Set `error` state, render inline error message; do not display count |
-| 401 / 403 | Inline error message indicating action is not authorised |
+| 401 / 403                | Inline error message indicating action is not authorised             |
 
 ---
 

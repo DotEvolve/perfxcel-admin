@@ -174,15 +174,16 @@ interface UseMetricsResult {
 }
 
 function extractErrorMessage(err: unknown): string {
-  if (
-    typeof err === "object" &&
-    err !== null &&
-    "response" in err
-  ) {
-    const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
-    return axiosErr.response?.data?.message
-      ?? axiosErr.message
-      ?? "Failed to load metrics";
+  if (typeof err === "object" && err !== null && "response" in err) {
+    const axiosErr = err as {
+      response?: { data?: { message?: string } };
+      message?: string;
+    };
+    return (
+      axiosErr.response?.data?.message ??
+      axiosErr.message ??
+      "Failed to load metrics"
+    );
   }
   if (err instanceof Error) return err.message;
   return "Failed to load metrics";
@@ -213,7 +214,9 @@ export function useMetrics(): UseMetricsResult {
           setLoading(false);
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [tick]);
 
   return { metrics, loading, error, refresh };
@@ -221,6 +224,7 @@ export function useMetrics(): UseMetricsResult {
 ```
 
 Key design notes:
+
 - `tick` in the dependency array means any call to `refresh()` re-runs the effect.
 - `setError(null)` at the start of each fetch clears stale errors before the new request completes.
 - `extractErrorMessage` checks `err.response.data.message` first (the shape `errorHandlerMiddleware` produces), then falls back to `err.message`, then to a static fallback string.
@@ -243,6 +247,7 @@ Dashboard
 **MetricCard** is a thin wrapper around the ui-kit `Card` component — it adds a title heading above the card's `children`. It lives within `Dashboard.tsx` and does not need to be promoted to `src/components/`.
 
 The card header contains the title on the left and the Lucide icon on the right:
+
 ```tsx
 interface MetricCardProps {
   title: string;
@@ -254,7 +259,9 @@ function MetricCard({ title, icon, children }: MetricCardProps) {
   return (
     <Card padding="md">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</h3>
+        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+          {title}
+        </h3>
         <span className="text-indigo-400">{icon}</span>
       </div>
       {children}
@@ -265,16 +272,17 @@ function MetricCard({ title, icon, children }: MetricCardProps) {
 
 **Lucide icon mapping** (all `w-5 h-5`):
 
-| Card | Icon component |
-|---|---|
-| Courses | `BookOpen` |
-| Taxonomies | `Tags` |
-| Interests | `Users` |
+| Card        | Icon component  |
+| ----------- | --------------- |
+| Courses     | `BookOpen`      |
+| Taxonomies  | `Tags`          |
+| Interests   | `Users`         |
 | Enrollments | `GraduationCap` |
 
 Icons are imported: `import { BookOpen, Tags, Users, GraduationCap, RefreshCw } from "lucide-react"`. `RefreshCw` is used for the refresh button spinner state.
 
 **Refresh button** in the page header:
+
 ```tsx
 <button
   onClick={refresh}
@@ -288,15 +296,16 @@ Icons are imported: `import { BookOpen, Tags, Users, GraduationCap, RefreshCw } 
 
 **Status badges use the ui-kit `Badge` component.** No custom badge classes. The `Badge` `color` prop accepts: `gray | green | amber | rose | indigo`.
 
-| Status | `Badge` color |
-|---|---|
-| `new` | `indigo` |
-| `contacted` | `amber` |
-| `enrolled`, `in_progress`, `achieved` | `green` |
-| `pending` | `gray` |
-| `rejected`, `dropped` | `rose` |
+| Status                                | `Badge` color |
+| ------------------------------------- | ------------- |
+| `new`                                 | `indigo`      |
+| `contacted`                           | `amber`       |
+| `enrolled`, `in_progress`, `achieved` | `green`       |
+| `pending`                             | `gray`        |
+| `rejected`, `dropped`                 | `rose`        |
 
 Each status row renders the `Badge` on the left and the count pushed right:
+
 ```tsx
 <div className="flex items-center justify-between py-1">
   <Badge label="new" color="indigo" />
@@ -310,12 +319,12 @@ Each status row renders the `Badge` on the left and the count pushed right:
 
 **ui-kit components used:**
 
-| Component | Import | Where |
-|---|---|---|
+| Component | Import              | Where                                                              |
+| --------- | ------------------- | ------------------------------------------------------------------ |
 | `Spinner` | `@dotevolve/ui-kit` | Loading state: `<Spinner size="lg" className="text-indigo-600" />` |
-| `Alert` | `@dotevolve/ui-kit` | Error state: `<Alert variant="error" message={error} />` |
-| `Card` | `@dotevolve/ui-kit` | Each metric card: `<Card padding="md">` |
-| `Badge` | `@dotevolve/ui-kit` | Each status label row |
+| `Alert`   | `@dotevolve/ui-kit` | Error state: `<Alert variant="error" message={error} />`           |
+| `Card`    | `@dotevolve/ui-kit` | Each metric card: `<Card padding="md">`                            |
+| `Badge`   | `@dotevolve/ui-kit` | Each status label row                                              |
 
 ---
 
@@ -355,14 +364,14 @@ Manual refresh:
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `perfxcel-api/src/controllers/metricsController.ts` | **NEW** |
-| `perfxcel-api/src/routes/metrics.ts` | **NEW** |
-| `perfxcel-api/src/app.ts` | **MODIFY** — add import + route mount |
-| `perfxcel-admin/src/index.css` | **MODIFY** — add ui-kit styles import |
-| `perfxcel-admin/src/types/metrics.ts` | **NEW** (creates `src/types/` directory) |
-| `perfxcel-admin/src/api.ts` | **MODIFY** — add `getMetrics()` |
-| `perfxcel-admin/src/hooks/useMetrics.ts` | **NEW** (creates `src/hooks/` directory) |
-| `perfxcel-admin/src/pages/Dashboard.tsx` | **NEW** |
-| `perfxcel-admin/src/App.tsx` | **MODIFY** — replace inline `Dashboard` with import |
+| File                                                | Change                                              |
+| --------------------------------------------------- | --------------------------------------------------- |
+| `perfxcel-api/src/controllers/metricsController.ts` | **NEW**                                             |
+| `perfxcel-api/src/routes/metrics.ts`                | **NEW**                                             |
+| `perfxcel-api/src/app.ts`                           | **MODIFY** — add import + route mount               |
+| `perfxcel-admin/src/index.css`                      | **MODIFY** — add ui-kit styles import               |
+| `perfxcel-admin/src/types/metrics.ts`               | **NEW** (creates `src/types/` directory)            |
+| `perfxcel-admin/src/api.ts`                         | **MODIFY** — add `getMetrics()`                     |
+| `perfxcel-admin/src/hooks/useMetrics.ts`            | **NEW** (creates `src/hooks/` directory)            |
+| `perfxcel-admin/src/pages/Dashboard.tsx`            | **NEW**                                             |
+| `perfxcel-admin/src/App.tsx`                        | **MODIFY** — replace inline `Dashboard` with import |

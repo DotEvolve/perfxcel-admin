@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
-import { getCourses, getTaxonomies, bulkUpdateCourses, deleteCourse } from "../lib/api";
+import {
+  getCourses,
+  getTaxonomies,
+  bulkUpdateCourses,
+  deleteCourse,
+} from "../lib/api";
 import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
 import Pagination from "../components/Pagination";
 
@@ -63,11 +68,20 @@ export function CoursesList() {
 
   useEffect(() => {
     fetchCourses();
-  }, [page, limit, sort, search, categoryIds, cityIds, associationIds, deliveryModeIds]);
+  }, [
+    page,
+    limit,
+    sort,
+    search,
+    categoryIds,
+    cityIds,
+    associationIds,
+    deliveryModeIds,
+  ]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedIds(new Set(courses.map(c => c.id)));
+      setSelectedIds(new Set(courses.map((c) => c.id)));
     } else {
       setSelectedIds(new Set());
     }
@@ -96,7 +110,12 @@ export function CoursesList() {
   };
 
   const handleDelete = async (course: Course) => {
-    if (!window.confirm(`Delete "${course.title}"? It will be permanently removed after 60 days.`)) return;
+    if (
+      !window.confirm(
+        `Delete "${course.title}"? It will be permanently removed after 60 days.`,
+      )
+    )
+      return;
     try {
       await deleteCourse(course.id);
       fetchCourses();
@@ -106,8 +125,13 @@ export function CoursesList() {
     }
   };
 
-  const handleFilterToggle = (setState: React.Dispatch<React.SetStateAction<string[]>>, id: string) => {
-    setState(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const handleFilterToggle = (
+    setState: React.Dispatch<React.SetStateAction<string[]>>,
+    id: string,
+  ) => {
+    setState((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
     setPage(1); // Reset page on filter change
   };
 
@@ -116,17 +140,22 @@ export function CoursesList() {
       {/* Sidebar Filters */}
       <div className="w-64 flex-shrink-0 bg-white rounded-lg shadow p-4 overflow-y-auto">
         <h4 className="font-medium text-gray-900 mb-4">Filters</h4>
-        
+
         {taxonomies && (
           <div className="space-y-6">
             <div>
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Categories</h5>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                Categories
+              </h5>
               <div className="space-y-2">
-                {taxonomies.categories.map(c => (
+                {taxonomies.categories.map((c) => (
                   <label key={c.id} className="flex items-center text-sm">
-                    <input type="checkbox" className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                           checked={categoryIds.includes(c.id)}
-                           onChange={() => handleFilterToggle(setCategoryIds, c.id)} />
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={categoryIds.includes(c.id)}
+                      onChange={() => handleFilterToggle(setCategoryIds, c.id)}
+                    />
                     {c.name}
                   </label>
                 ))}
@@ -134,13 +163,20 @@ export function CoursesList() {
             </div>
 
             <div>
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Delivery Modes</h5>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                Delivery Modes
+              </h5>
               <div className="space-y-2">
-                {taxonomies.delivery_modes.map(c => (
+                {taxonomies.delivery_modes.map((c) => (
                   <label key={c.id} className="flex items-center text-sm">
-                    <input type="checkbox" className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                           checked={deliveryModeIds.includes(c.id)}
-                           onChange={() => handleFilterToggle(setDeliveryModeIds, c.id)} />
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={deliveryModeIds.includes(c.id)}
+                      onChange={() =>
+                        handleFilterToggle(setDeliveryModeIds, c.id)
+                      }
+                    />
                     {c.name}
                   </label>
                 ))}
@@ -150,11 +186,14 @@ export function CoursesList() {
             <div>
               <h5 className="text-sm font-medium text-gray-700 mb-2">Cities</h5>
               <div className="space-y-2">
-                {taxonomies.cities.map(c => (
+                {taxonomies.cities.map((c) => (
                   <label key={c.id} className="flex items-center text-sm">
-                    <input type="checkbox" className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                           checked={cityIds.includes(c.id)}
-                           onChange={() => handleFilterToggle(setCityIds, c.id)} />
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={cityIds.includes(c.id)}
+                      onChange={() => handleFilterToggle(setCityIds, c.id)}
+                    />
                     {c.name}
                   </label>
                 ))}
@@ -162,13 +201,20 @@ export function CoursesList() {
             </div>
 
             <div>
-              <h5 className="text-sm font-medium text-gray-700 mb-2">Associations</h5>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                Associations
+              </h5>
               <div className="space-y-2">
-                {taxonomies.associations.map(c => (
+                {taxonomies.associations.map((c) => (
                   <label key={c.id} className="flex items-center text-sm">
-                    <input type="checkbox" className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
-                           checked={associationIds.includes(c.id)}
-                           onChange={() => handleFilterToggle(setAssociationIds, c.id)} />
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={associationIds.includes(c.id)}
+                      onChange={() =>
+                        handleFilterToggle(setAssociationIds, c.id)
+                      }
+                    />
                     {c.name}
                   </label>
                 ))}
@@ -205,7 +251,10 @@ export function CoursesList() {
             type="text"
             placeholder="Search courses..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full max-w-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
           <select
@@ -231,30 +280,54 @@ export function CoursesList() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10"
+                      >
                         <input
                           type="checkbox"
                           className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                          checked={courses.length > 0 && selectedIds.size === courses.length}
+                          checked={
+                            courses.length > 0 &&
+                            selectedIds.size === courses.length
+                          }
                           onChange={handleSelectAll}
                         />
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Course
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Code
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Category
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Delivery Mode
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Status
                       </th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Actions
                       </th>
                     </tr>
@@ -262,7 +335,10 @@ export function CoursesList() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {courses.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
+                        <td
+                          colSpan={7}
+                          className="px-6 py-10 text-center text-gray-500"
+                        >
                           No courses found.
                         </td>
                       </tr>
@@ -279,26 +355,36 @@ export function CoursesList() {
                               />
                             </td>
                             <td className="px-6 py-4">
-                              <h4 className="text-sm font-medium text-gray-900">{course.title}</h4>
+                              <h4 className="text-sm font-medium text-gray-900">
+                                {course.title}
+                              </h4>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-sm text-gray-500 font-mono">{course.short_code}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-sm text-gray-500">
-                                {course.categories?.map(c => c.name).join(", ") || "-"}
+                              <span className="text-sm text-gray-500 font-mono">
+                                {course.short_code}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className="text-sm text-gray-500">
-                                {course.delivery_modes?.map(c => c.name).join(", ") || "-"}
+                                {course.categories
+                                  ?.map((c) => c.name)
+                                  .join(", ") || "-"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-500">
+                                {course.delivery_modes
+                                  ?.map((c) => c.name)
+                                  .join(", ") || "-"}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+                              >
                                 {course.is_published ? "Published" : "Draft"}
                               </span>
-                              {course.status === 'archived' && (
+                              {course.status === "archived" && (
                                 <span className="ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                   Archived
                                 </span>
@@ -315,16 +401,30 @@ export function CoursesList() {
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <button 
-                                onClick={() => setExpandedId(expandedId === course.id ? null : course.id)} 
+                              <button
+                                onClick={() =>
+                                  setExpandedId(
+                                    expandedId === course.id ? null : course.id,
+                                  )
+                                }
                                 className="text-indigo-600 hover:text-indigo-900 mr-4"
                               >
                                 {expandedId === course.id ? "Hide" : "Expand"}
                               </button>
-                              <button onClick={() => navigate(`/courses/${course.id}/edit`)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                              <button
+                                onClick={() =>
+                                  navigate(`/courses/${course.id}/edit`)
+                                }
+                                className="text-indigo-600 hover:text-indigo-900 mr-4"
+                              >
                                 Edit
                               </button>
-                              <a href={getWebsiteUrl(course)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900 mr-4">
+                              <a
+                                href={getWebsiteUrl(course)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-900 mr-4"
+                              >
                                 View
                               </a>
                               <button
@@ -356,16 +456,49 @@ export function CoursesList() {
                                   )}
                                   {/* Details */}
                                   <div className="text-sm text-gray-700 flex-1 space-y-2">
-                                    <p><strong>Description:</strong> {course.description || "—"}</p>
-                                    <p><strong>Objectives:</strong> {course.objectives || "—"}</p>
-                                    <p><strong>Target Audience:</strong> {course.target_audience || "—"}</p>
-                                    <p><strong>Cities:</strong> {course.cities?.map(c => c.name).join(", ") || "None"}</p>
-                                    <p><strong>Associations:</strong> {course.associations?.map(c => c.name).join(", ") || "None"}</p>
+                                    <p>
+                                      <strong>Description:</strong>{" "}
+                                      {course.description || "—"}
+                                    </p>
+                                    <p>
+                                      <strong>Objectives:</strong>{" "}
+                                      {course.objectives || "—"}
+                                    </p>
+                                    <p>
+                                      <strong>Target Audience:</strong>{" "}
+                                      {course.target_audience || "—"}
+                                    </p>
+                                    <p>
+                                      <strong>Cities:</strong>{" "}
+                                      {course.cities
+                                        ?.map((c) => c.name)
+                                        .join(", ") || "None"}
+                                    </p>
+                                    <p>
+                                      <strong>Associations:</strong>{" "}
+                                      {course.associations
+                                        ?.map((c) => c.name)
+                                        .join(", ") || "None"}
+                                    </p>
                                     <div className="flex gap-6">
-                                      <p><strong>Cost:</strong> {course.cost != null ? `$${course.cost}` : "N/A"}</p>
-                                      <p><strong>Duration:</strong> {course.duration || "N/A"}</p>
-                                      <p><strong>Public:</strong> {course.is_public ? "✅ Yes" : "No"}</p>
-                                      <p><strong>Blended:</strong> {course.is_blended ? "✅ Yes" : "No"}</p>
+                                      <p>
+                                        <strong>Cost:</strong>{" "}
+                                        {course.cost != null
+                                          ? `$${course.cost}`
+                                          : "N/A"}
+                                      </p>
+                                      <p>
+                                        <strong>Duration:</strong>{" "}
+                                        {course.duration || "N/A"}
+                                      </p>
+                                      <p>
+                                        <strong>Public:</strong>{" "}
+                                        {course.is_public ? "✅ Yes" : "No"}
+                                      </p>
+                                      <p>
+                                        <strong>Blended:</strong>{" "}
+                                        {course.is_blended ? "✅ Yes" : "No"}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -378,7 +511,12 @@ export function CoursesList() {
                   </tbody>
                 </table>
               </div>
-              <Pagination page={page} limit={limit} total={total} onPageChange={setPage} />
+              <Pagination
+                page={page}
+                limit={limit}
+                total={total}
+                onPageChange={setPage}
+              />
             </>
           )}
         </div>
@@ -411,11 +549,15 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Bulk Edit Courses ({count} selected)</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            Bulk Edit Courses ({count} selected)
+          </h3>
         </div>
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Publish Status</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Publish Status
+            </label>
             <select
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               onChange={(e) => {
@@ -424,7 +566,10 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
                   delete newUpdates.is_published;
                   setUpdates(newUpdates);
                 } else {
-                  setUpdates({ ...updates, is_published: e.target.value === "true" });
+                  setUpdates({
+                    ...updates,
+                    is_published: e.target.value === "true",
+                  });
                 }
               }}
             >
@@ -435,7 +580,9 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lifecycle Status</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Lifecycle Status
+            </label>
             <select
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               onChange={(e) => {
@@ -444,7 +591,10 @@ function BulkEditModal({ onClose, onSubmit, count }: any) {
                   delete newUpdates.status;
                   setUpdates(newUpdates);
                 } else {
-                  setUpdates({ ...updates, status: e.target.value as 'active' | 'archived' | 'deleted' });
+                  setUpdates({
+                    ...updates,
+                    status: e.target.value as "active" | "archived" | "deleted",
+                  });
                 }
               }}
             >

@@ -36,14 +36,14 @@ These changes MUST be applied together in a single pass — migrating the API cl
 
 **REQ-2.3** All existing imports of `"../api"` or `"./api"` across the codebase MUST be updated to point to the new location:
 
-| File | Old import | New import |
-|---|---|---|
-| `src/App.tsx` | `"./api"` | `"./lib/api"` |
+| File                            | Old import | New import     |
+| ------------------------------- | ---------- | -------------- |
+| `src/App.tsx`                   | `"./api"`  | `"./lib/api"`  |
 | `src/components/CourseForm.tsx` | `"../api"` | `"../lib/api"` |
-| `src/pages/CoursesList.tsx` | `"../api"` | `"../lib/api"` |
-| `src/pages/Interests.tsx` | `"../api"` | `"../lib/api"` |
-| `src/pages/Enrollments.tsx` | `"../api"` | `"../lib/api"` |
-| `src/hooks/useMetrics.ts` | `"../api"` | `"../lib/api"` |
+| `src/pages/CoursesList.tsx`     | `"../api"` | `"../lib/api"` |
+| `src/pages/Interests.tsx`       | `"../api"` | `"../lib/api"` |
+| `src/pages/Enrollments.tsx`     | `"../api"` | `"../lib/api"` |
+| `src/hooks/useMetrics.ts`       | `"../api"` | `"../lib/api"` |
 
 **REQ-2.4** The original `src/api.ts` MUST be deleted after all imports are updated.
 
@@ -62,6 +62,7 @@ These changes MUST be applied together in a single pass — migrating the API cl
 **REQ-3.3** `TaxonomyCard` MAY remain as a non-exported local component in `src/pages/Taxonomies.tsx` — it does not need to be promoted to `src/components/`.
 
 **REQ-3.4** The `Taxonomies` import in `App.tsx` MUST be updated to use the new page file:
+
 ```typescript
 import Taxonomies from "./pages/Taxonomies";
 ```

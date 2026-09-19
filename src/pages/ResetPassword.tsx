@@ -31,7 +31,7 @@ export function ResetPassword() {
       });
 
       if (error) throw error;
-      
+
       setSuccess(true);
       setTimeout(() => navigate("/"), 2000);
     } catch (err: any) {
@@ -48,7 +48,9 @@ export function ResetPassword() {
           <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
             <KeyRound className="w-6 h-6 text-indigo-600" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Set New Password</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Set New Password
+          </h1>
           <p className="text-sm text-slate-500 mt-2 text-center">
             Enter your new password below.
           </p>
@@ -62,8 +64,12 @@ export function ResetPassword() {
 
         {success ? (
           <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
-            <h3 className="text-green-800 font-medium mb-2">Password Updated!</h3>
-            <p className="text-sm text-green-600">Redirecting to dashboard...</p>
+            <h3 className="text-green-800 font-medium mb-2">
+              Password Updated!
+            </h3>
+            <p className="text-sm text-green-600">
+              Redirecting to dashboard...
+            </p>
           </div>
         ) : (
           <form onSubmit={handleReset} className="space-y-6">
