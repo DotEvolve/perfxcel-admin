@@ -156,9 +156,30 @@ export const updateCourse = async (
   return response.data.data;
 };
 
-export const getTaxonomies = async () => {
+// --- Taxonomies ---
+export const getTaxonomies = async (): Promise<any> => {
   const response = await api.get("/taxonomies");
   return response.data.data;
+};
+
+export const createTaxonomy = async (type: string, name: string): Promise<any> => {
+  const response = await api.post(`/taxonomies/${type}`, { name });
+  return response.data;
+};
+
+export const updateTaxonomy = async (type: string, id: string, name: string): Promise<any> => {
+  const response = await api.put(`/taxonomies/${type}/${id}`, { name });
+  return response.data;
+};
+
+export const deleteTaxonomy = async (type: string, id: string): Promise<any> => {
+  const response = await api.delete(`/taxonomies/${type}/${id}`);
+  return response.data;
+};
+
+export const resendCertificate = async (id: string): Promise<any> => {
+  const response = await api.post(`/enrollments/${id}/resend-certificate`);
+  return response.data;
 };
 
 export const getEnrollments = async (

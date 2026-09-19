@@ -8,6 +8,7 @@ import {
 import type { PaginatedResponse } from "../lib/api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
 import Pagination from "../components/Pagination";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export default function Interests() {
   const [interests, setInterests] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export default function Interests() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [converting, setConverting] = useState<string | null>(null);
+  const [confirmConvertId, setConfirmConvertId] = useState<string | null>(null);
   const [convertError, setConvertError] = useState<Record<string, string>>({});
 
   // Filters and Sorting State
@@ -78,9 +80,10 @@ export default function Interests() {
     }
   };
 
-  const handleConvertToEnrollment = async (id: string) => {
+  const executeConversion = async (id: string) => {
     setConverting(id);
     setConvertError((prev) => ({ ...prev, [id]: "" }));
+    setConfirmConvertId(null);
     try {
       await createEnrollment(id);
       await loadInterests();
@@ -93,6 +96,10 @@ export default function Interests() {
     } finally {
       setConverting(null);
     }
+  };
+
+  const handleConvertToEnrollment = (id: string) => {
+    setConfirmConvertId(id);
   };
 
   const getStatusColor = (status: string) => {
@@ -182,6 +189,7 @@ export default function Interests() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
       alert("Failed to download CSV");
@@ -332,7 +340,8 @@ export default function Interests() {
                           }
                           disabled={
                             updating === interest.id ||
-                            converting === interest.id
+                            converting === interest.id ||
+                            interest.status === "enrolled"
                           }
                           className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 inline-block mr-2"
                         >
@@ -387,6 +396,17 @@ export default function Interests() {
           </>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={!!confirmConvertId}
+        title="Convert to Enrollment"
+        message="Are you sure you want to convert this enquiry into an enrollment? This will create an active training record and update the enquiry status."
+        confirmText="Convert"
+        cancelText="Cancel"
+        onConfirm={() => confirmConvertId && executeConversion(confirmConvertId)}
+        onCancel={() => setConfirmConvertId(null)}
+        isDestructive={false}
+      />
     </div>
   );
 }

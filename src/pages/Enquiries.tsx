@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { getEnquiries, updateEnquiryStatus } from "../lib/api";
 import Pagination from "../components/Pagination";
+import { Search, Download } from "lucide-react";
 
 export default function Enquiries() {
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
   const fetchEnquiries = async () => {
     try {
       setLoading(true);
-      const res = await getEnquiries({ page, limit: 10 });
+      const res = await getEnquiries({ search, page, limit: 10 });
       setEnquiries(res.data);
       setTotal(res.total);
     } catch (err) {
@@ -23,7 +25,7 @@ export default function Enquiries() {
 
   useEffect(() => {
     fetchEnquiries();
-  }, [page]);
+  }, [page, search]);
 
   const handleStatusChange = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "new" ? "responded" : "new";
@@ -36,6 +38,56 @@ export default function Enquiries() {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    fetchEnquiries();
+  };
+
+  const handleDownloadCSV = async () => {
+    try {
+      const res = await getEnquiries({ search, limit: 10000 });
+      if (res.data.length === 0) {
+        alert("No data to download.");
+        return;
+      }
+
+      const headers = ["Date", "Name", "Email", "Course", "Status", "Message"];
+      const csvContent = [
+        headers.join(","),
+        ...res.data.map((enq: any) => {
+          const date = new Date(enq.created_at).toLocaleDateString();
+          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+
+          return [
+            date,
+            escapeCSV(enq.name + (enq.company ? ` (${enq.company})` : "")),
+            escapeCSV(enq.email),
+            escapeCSV(enq.courses?.title || "General Enquiry"),
+            escapeCSV(enq.status),
+            escapeCSV(enq.message),
+          ].join(",");
+        }),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `enquiries_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download CSV");
+    }
+  };
+
   if (loading && enquiries.length === 0) {
     return <div className="p-8">Loading...</div>;
   }
@@ -44,9 +96,40 @@ export default function Enquiries() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Enquiries</h2>
+        <button
+          onClick={handleDownloadCSV}
+          disabled={total === 0}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </button>
       </div>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search name or email..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+        
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

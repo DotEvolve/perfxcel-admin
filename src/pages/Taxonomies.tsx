@@ -1,56 +1,147 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import { getTaxonomies, api } from "../lib/api";
+import { getTaxonomies } from "../lib/api";
 import type { TaxonomyItem } from "../lib/api";
+
+import { Pencil, Trash2, Plus } from "lucide-react";
+import InlineEditModal from "../components/InlineEditModal";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { createTaxonomy, updateTaxonomy, deleteTaxonomy } from "../lib/api";
 
 function TaxonomyCard({
   title,
   type,
   items,
-  onAdd,
+  onRefresh,
 }: {
   title: string;
   type: string;
   items: TaxonomyItem[];
-  onAdd: () => void;
+  onRefresh: () => void;
 }) {
-  const handleAdd = async () => {
-    const name = window.prompt(`Enter new ${title} name:`);
-    if (!name) return;
+  const [newItemName, setNewItemName] = useState("");
+  const [adding, setAdding] = useState(false);
+  
+  const [editItem, setEditItem] = useState<TaxonomyItem | null>(null);
+  const [deleteItem, setDeleteItem] = useState<TaxonomyItem | null>(null);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItemName.trim()) return;
+    setAdding(true);
     try {
-      await api.post(`/taxonomies/${type}`, { name });
-      onAdd();
+      await createTaxonomy(type, newItemName.trim());
+      setNewItemName("");
+      onRefresh();
     } catch (err) {
       console.error(err);
       alert("Failed to add");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleEdit = async (newName: string) => {
+    if (!editItem) return;
+    try {
+      await updateTaxonomy(type, editItem.id, newName);
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update");
+    } finally {
+      setEditItem(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+    try {
+      await deleteTaxonomy(type, deleteItem.id);
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete");
+    } finally {
+      setDeleteItem(null);
     }
   };
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+    <div className="bg-white shadow rounded-lg overflow-hidden flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
         <h4 className="font-medium text-gray-900">{title}</h4>
-        <button
-          onClick={handleAdd}
-          className="text-sm text-indigo-600 font-medium hover:text-indigo-800"
-        >
-          Add
-        </button>
       </div>
-      <ul className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+      
+      <ul className="divide-y divide-gray-200 flex-1 overflow-y-auto min-h-[200px] max-h-96">
         {items.length === 0 ? (
           <li className="px-4 py-3 text-sm text-gray-500 text-center">Empty</li>
         ) : (
           items.map((item) => (
             <li
               key={item.id}
-              className="px-4 py-3 text-sm text-gray-700 flex justify-between hover:bg-gray-50"
+              className="px-4 py-3 text-sm text-gray-700 flex justify-between items-center hover:bg-gray-50 group"
             >
-              {item.name}
+              <span>{item.name}</span>
+              <div className="hidden group-hover:flex space-x-2">
+                <button
+                  onClick={() => setEditItem(item)}
+                  className="text-gray-400 hover:text-indigo-600 transition-colors"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDeleteItem(item)}
+                  className="text-gray-400 hover:text-red-600 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </li>
           ))
         )}
       </ul>
+      
+      <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+        <form onSubmit={handleAdd} className="flex gap-2">
+          <input
+            type="text"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            placeholder={`New ${title.slice(0, -1).toLowerCase()}...`}
+            className="flex-1 min-w-0 text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 px-3 py-1.5 border"
+            disabled={adding}
+          />
+          <button
+            type="submit"
+            disabled={!newItemName.trim() || adding}
+            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
+
+      <InlineEditModal
+        isOpen={!!editItem}
+        title={`Edit ${title.slice(0, -1)}`}
+        initialValue={editItem?.name || ""}
+        onSave={handleEdit}
+        onCancel={() => setEditItem(null)}
+      />
+
+      <ConfirmationModal
+        isOpen={!!deleteItem}
+        title={`Delete ${title.slice(0, -1)}`}
+        message={
+          <>
+            Are you sure you want to delete <strong>{deleteItem?.name}</strong>?
+          </>
+        }
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteItem(null)}
+      />
     </div>
   );
 }
@@ -108,25 +199,25 @@ export default function Taxonomies() {
             title="Categories"
             type="categories"
             items={filterItems(data.categories)}
-            onAdd={fetchTaxonomies}
+            onRefresh={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Cities"
             type="cities"
             items={filterItems(data.cities)}
-            onAdd={fetchTaxonomies}
+            onRefresh={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Associations"
             type="associations"
             items={filterItems(data.associations)}
-            onAdd={fetchTaxonomies}
+            onRefresh={fetchTaxonomies}
           />
           <TaxonomyCard
             title="Delivery Modes"
             type="delivery_modes"
             items={filterItems(data.delivery_modes)}
-            onAdd={fetchTaxonomies}
+            onRefresh={fetchTaxonomies}
           />
         </div>
       )}

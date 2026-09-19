@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getTrainingPlanRequests } from "../lib/api";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 
 export default function TrainingPlanRequests() {
   const [requests, setRequests] = useState<any[]>([]);
@@ -34,6 +34,52 @@ export default function TrainingPlanRequests() {
     fetchRequests();
   };
 
+  const handleDownloadCSV = async () => {
+    try {
+      const data = await getTrainingPlanRequests({ search, limit: 10000 });
+      if (data.data.length === 0) {
+        alert("No data to download.");
+        return;
+      }
+
+      const headers = ["Date", "Name", "Email", "Mobile", "Company", "Designation", "Status"];
+      const csvContent = [
+        headers.join(","),
+        ...data.data.map((r: any) => {
+          const date = new Date(r.created_at).toLocaleDateString();
+          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+          const status = new Date(r.expires_at) < new Date() ? "Expired" : "Valid";
+
+          return [
+            date,
+            escapeCSV(r.name),
+            escapeCSV(r.email),
+            escapeCSV(r.mobile),
+            escapeCSV(r.company),
+            escapeCSV(r.designation),
+            status,
+          ].join(",");
+        }),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `training_plan_requests_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download CSV");
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -42,6 +88,14 @@ export default function TrainingPlanRequests() {
         <h1 className="text-2xl font-bold text-gray-900">
           Training Plan Requests
         </h1>
+        <button
+          onClick={handleDownloadCSV}
+          disabled={total === 0}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </button>
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">

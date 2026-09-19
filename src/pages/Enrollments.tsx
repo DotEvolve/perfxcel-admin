@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { getEnrollments, updateEnrollmentStatus } from "../lib/api";
+import { getEnrollments, updateEnrollmentStatus, resendCertificate } from "../lib/api";
 import type { PaginatedResponse } from "../lib/api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
 import Pagination from "../components/Pagination";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export interface Enrollment {
   id: string;
@@ -22,6 +23,11 @@ export default function Enrollments() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  
+  const [confirmAchieveEnrollment, setConfirmAchieveEnrollment] = useState<Enrollment | null>(null);
+  const [resendingCert, setResendingCert] = useState<Record<string, boolean>>({});
+  const [resendCertSuccess, setResendCertSuccess] = useState<Record<string, string>>({});
+  const [resendCertError, setResendCertError] = useState<Record<string, string>>({});
 
   // Filters and Sorting State
   const [page, setPage] = useState(1);
@@ -52,7 +58,7 @@ export default function Enrollments() {
     loadEnrollments();
   }, [page, limit, searchQuery, statusFilter, sortField, sortOrder]);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const executeUpdateStatus = async (id: string, status: string) => {
     setUpdating(id);
     try {
       await updateEnrollmentStatus(id, status);
@@ -62,6 +68,32 @@ export default function Enrollments() {
       alert("Failed to update status");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const handleUpdateStatus = (enrollment: Enrollment, status: string) => {
+    if (status === "achieved") {
+      setConfirmAchieveEnrollment(enrollment);
+    } else {
+      executeUpdateStatus(enrollment.id, status);
+    }
+  };
+
+  const handleResendCertificate = async (id: string) => {
+    setResendingCert((prev) => ({ ...prev, [id]: true }));
+    setResendCertSuccess((prev) => ({ ...prev, [id]: "" }));
+    setResendCertError((prev) => ({ ...prev, [id]: "" }));
+    try {
+      await resendCertificate(id);
+      setResendCertSuccess((prev) => ({ ...prev, [id]: "Certificate sent!" }));
+    } catch (err: any) {
+      console.error(err);
+      setResendCertError((prev) => ({
+        ...prev,
+        [id]: err.response?.data?.message || "Failed to resend",
+      }));
+    } finally {
+      setResendingCert((prev) => ({ ...prev, [id]: false }));
     }
   };
 
@@ -140,6 +172,7 @@ export default function Enrollments() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
       alert("Failed to download CSV");
@@ -249,14 +282,14 @@ export default function Enrollments() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(enrollment.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <select
                           value={enrollment.status}
                           onChange={(e) =>
-                            handleUpdateStatus(enrollment.id, e.target.value)
+                            handleUpdateStatus(enrollment, e.target.value)
                           }
-                          disabled={updating === enrollment.id}
-                          className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50"
+                          disabled={updating === enrollment.id || enrollment.status === "achieved"}
+                          className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 inline-block align-top"
                         >
                           <option value="pending">Pending</option>
                           <option value="in_progress">In Progress</option>
@@ -267,6 +300,28 @@ export default function Enrollments() {
                           <span className="text-gray-500 ml-2 text-xs">
                             Updating...
                           </span>
+                        )}
+                        
+                        {enrollment.status === "achieved" && (
+                          <div className="inline-block flex-col align-top text-left ml-2">
+                            <button
+                              onClick={() => handleResendCertificate(enrollment.id)}
+                              disabled={resendingCert[enrollment.id]}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                              {resendingCert[enrollment.id] ? "Resending..." : "Resend Certificate"}
+                            </button>
+                            {resendCertSuccess[enrollment.id] && (
+                              <div className="text-green-600 text-xs mt-1 block">
+                                {resendCertSuccess[enrollment.id]}
+                              </div>
+                            )}
+                            {resendCertError[enrollment.id] && (
+                              <div className="text-red-500 text-xs mt-1 block">
+                                {resendCertError[enrollment.id]}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -293,6 +348,28 @@ export default function Enrollments() {
           </>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={!!confirmAchieveEnrollment}
+        title="Mark Course Achieved"
+        message={
+          <>
+            Are you sure you want to mark <strong>{confirmAchieveEnrollment?.course_interests?.name || "this candidate"}</strong>'s enrollment in <strong>{confirmAchieveEnrollment?.course_interests?.courses?.title || "this course"}</strong> as achieved?
+            <br /><br />
+            This will issue a certificate and lock the enrollment from further changes.
+          </>
+        }
+        confirmText="Mark Achieved"
+        cancelText="Cancel"
+        onConfirm={() => {
+          if (confirmAchieveEnrollment) {
+            executeUpdateStatus(confirmAchieveEnrollment.id, "achieved");
+            setConfirmAchieveEnrollment(null);
+          }
+        }}
+        onCancel={() => setConfirmAchieveEnrollment(null)}
+        isDestructive={false}
+      />
     </div>
   );
 }
