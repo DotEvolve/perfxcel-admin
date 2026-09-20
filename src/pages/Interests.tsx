@@ -196,7 +196,6 @@ export default function Interests() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      alert("Failed to download CSV");
     }
   };
 

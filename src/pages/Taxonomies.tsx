@@ -141,6 +141,7 @@ function TaxonomyCard({
         initialValue={editItem?.name || ""}
         onSave={handleEdit}
         onCancel={() => setEditItem(null)}
+        isLoading={editLoading}
       />
 
       <ConfirmationModal
