@@ -146,6 +146,9 @@ export default function Enquiries() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Message
+              </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Action
               </th>
@@ -180,6 +183,9 @@ export default function Enquiries() {
                     {enq.status}
                   </span>
                 </td>
+                <td className="px-6 py-4 text-sm text-gray-500 whitespace-normal max-w-xs">
+                  {enq.message}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => handleStatusChange(enq.id, enq.status)}
@@ -187,9 +193,6 @@ export default function Enquiries() {
                   >
                     Mark {enq.status === "new" ? "Responded" : "New"}
                   </button>
-                  <div className="mt-1 max-w-xs text-left text-xs text-gray-500 whitespace-normal">
-                    {enq.message}
-                  </div>
                 </td>
               </tr>
             ))}
