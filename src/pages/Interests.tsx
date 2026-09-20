@@ -354,17 +354,18 @@ export default function Interests() {
                           <option value="rejected">Rejected</option>
                         </select>
 
-                        {interest.status === "enrolled" && (
                           <div className="inline-block flex-col align-top">
                             <button
                               onClick={() =>
                                 handleConvertToEnrollment(interest.id)
                               }
-                              disabled={converting === interest.id}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                              disabled={converting === interest.id || interest.status === "enrolled"}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {converting === interest.id
                                 ? "Converting..."
+                                : interest.status === "enrolled"
+                                ? "Converted"
                                 : "Convert to Enrollment"}
                             </button>
                             {convertError[interest.id] && (
@@ -373,7 +374,6 @@ export default function Interests() {
                               </div>
                             )}
                           </div>
-                        )}
                       </td>
                     </tr>
                   ))}
