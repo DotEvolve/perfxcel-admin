@@ -338,9 +338,13 @@ export default function Interests() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <select
                           value={interest.status}
-                          onChange={(e) =>
-                            handleUpdateStatus(interest.id, e.target.value)
-                          }
+                          onChange={(e) => {
+                            if (e.target.value === "enrolled") {
+                              handleConvertToEnrollment(interest.id);
+                            } else {
+                              handleUpdateStatus(interest.id, e.target.value);
+                            }
+                          }}
                           disabled={
                             updating === interest.id ||
                             converting === interest.id ||
