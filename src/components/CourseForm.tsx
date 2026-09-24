@@ -10,6 +10,7 @@ import {
 } from "../validators/courseFormSchema";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import ConfirmationModal from "./ConfirmationModal";
 import {
   DndContext,
   closestCenter,
@@ -225,6 +226,7 @@ export default function CourseForm() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [brochureFile, setBrochureFile] = useState<File | null>(null);
   const [brochureError, setBrochureError] = useState<string | null>(null);
+  const [sizeErrorModal, setSizeErrorModal] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ""});
   const [imageError, setImageError] = useState<string | null>(null);
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
@@ -292,10 +294,13 @@ export default function CourseForm() {
     if (!file) return;
     if (file.type !== "application/pdf")
       return setBrochureError("Only PDF allowed");
-    if (file.size > 20 * 1024 * 1024) {
-      window.alert("File size exceeds 20MB limit. Please upload a smaller PDF.");
+    if (file.size > 2 * 1024 * 1024) {
+      setSizeErrorModal({
+        isOpen: true,
+        message: "File size exceeds the 2MB limit. Please reduce the size and upload a smaller PDF."
+      });
       e.target.value = "";
-      return setBrochureError("Max size 20MB");
+      return setBrochureError("Max size 2MB");
     }
     setBrochureError(null);
     setBrochureFile(file);
@@ -792,6 +797,15 @@ export default function CourseForm() {
           </button>
         </div>
       </form>
+      <ConfirmationModal
+        isOpen={sizeErrorModal.isOpen}
+        title="File Too Large"
+        message={sizeErrorModal.message}
+        confirmText="OK"
+        isDestructive={false}
+        onConfirm={() => setSizeErrorModal({ isOpen: false, message: "" })}
+        onCancel={() => setSizeErrorModal({ isOpen: false, message: "" })}
+      />
     </div>
   );
 }

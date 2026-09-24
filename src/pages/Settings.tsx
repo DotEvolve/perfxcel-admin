@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getSettings, updateSettings, uploadTrainingPlan, downloadTrainingPlanUrl } from "../lib/api";
 import { Alert } from "@dotevolve/ui-kit";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export default function Settings() {
   const [trainingExpiry, setTrainingExpiry] = useState<number | "">("");
@@ -14,6 +15,7 @@ export default function Settings() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [sizeErrorModal, setSizeErrorModal] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ""});
 
   useEffect(() => {
     getSettings()
@@ -141,8 +143,11 @@ export default function Settings() {
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
-              if (file.size > 20 * 1024 * 1024) {
-                window.alert("File size exceeds 20MB limit. Please upload a smaller file.");
+              if (file.size > 5 * 1024 * 1024) {
+                setSizeErrorModal({
+                  isOpen: true,
+                  message: "File size exceeds the 5MB limit. Please reduce the size and upload a smaller file."
+                });
                 if (fileInputRef.current) fileInputRef.current.value = "";
                 return;
               }
@@ -195,6 +200,15 @@ export default function Settings() {
           </button>
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={sizeErrorModal.isOpen}
+        title="File Too Large"
+        message={sizeErrorModal.message}
+        confirmText="OK"
+        isDestructive={false}
+        onConfirm={() => setSizeErrorModal({ isOpen: false, message: "" })}
+        onCancel={() => setSizeErrorModal({ isOpen: false, message: "" })}
+      />
     </div>
   );
 }

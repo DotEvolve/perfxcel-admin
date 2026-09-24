@@ -153,9 +153,17 @@ export const uploadTrainingPlan = async (file: File): Promise<{ url: string }> =
   return response.data.data;
 };
 
-export const downloadTrainingPlanUrl = async (): Promise<string> => {
-  const response = await api.get("/upload/training-plan/download");
-  return response.data.data.signedUrl;
+export const downloadTrainingPlanFile = async (): Promise<void> => {
+  const response = await api.get("/upload/training-plan/download", {
+    responseType: "blob",
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "training_plan.pdf");
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode?.removeChild(link);
 };
 
 export const uploadCourseBrochure = async (file: File, shortCode: string): Promise<{ url: string; filename: string }> => {
