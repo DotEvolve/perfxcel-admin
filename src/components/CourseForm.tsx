@@ -8,8 +8,8 @@ import {
   courseFormSchema,
   type CourseFormValues,
 } from "../validators/courseFormSchema";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import {
   DndContext,
   closestCenter,
@@ -292,7 +292,11 @@ export default function CourseForm() {
     if (!file) return;
     if (file.type !== "application/pdf")
       return setBrochureError("Only PDF allowed");
-    if (file.size > 20 * 1024 * 1024) return setBrochureError("Max size 20MB");
+    if (file.size > 20 * 1024 * 1024) {
+      window.alert("File size exceeds 20MB limit. Please upload a smaller PDF.");
+      e.target.value = "";
+      return setBrochureError("Max size 20MB");
+    }
     setBrochureError(null);
     setBrochureFile(file);
   };

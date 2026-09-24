@@ -141,6 +141,11 @@ export default function Settings() {
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
+              if (file.size > 20 * 1024 * 1024) {
+                window.alert("File size exceeds 20MB limit. Please upload a smaller file.");
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                return;
+              }
               setUploading(true);
               setMessage(null);
               try {
