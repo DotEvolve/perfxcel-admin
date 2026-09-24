@@ -45,6 +45,18 @@ export interface CourseSchedule {
   status: "open" | "guaranteed" | "filling_fast" | "closed" | "cancelled";
 }
 
+export interface CourseModule {
+  title: string;
+  description?: string;
+  duration?: string;
+}
+
+export interface CourseDay {
+  day: number;
+  title: string;
+  modules: CourseModule[];
+}
+
 export interface Course {
   id: string;
   slug?: string;
@@ -66,6 +78,8 @@ export interface Course {
   status?: "active" | "archived" | "deleted";
   is_public?: boolean;
   deleted_at?: string | null;
+  course_outline?: CourseDay[] | null;
+  brochure_url?: string | null;
 }
 
 export interface CourseFormPayload {
@@ -114,6 +128,17 @@ export const getMetrics = async (): Promise<DashboardMetrics> => {
   return response.data.data;
 };
 
+// --- Settings ---
+export const getSettings = async () => {
+  const response = await api.get("/settings");
+  return response.data.data;
+};
+
+export const updateSetting = async (key: string, value: any) => {
+  const response = await api.patch("/settings", { key, value });
+  return response.data.data;
+};
+
 export const getInterests = async (
   params?: Record<string, any>,
 ): Promise<PaginatedResponse<any>> => {
@@ -123,6 +148,26 @@ export const getInterests = async (
 
 export const updateInterestStatus = async (id: string, status: string) => {
   const response = await api.patch(`/interests/${id}`, { status });
+  return response.data;
+};
+
+export const createInterestManual = async (payload: any) => {
+  const response = await api.post("/interests", payload);
+  return response.data.data;
+};
+
+export const resendBrochure = async (id: string) => {
+  const response = await api.post(`/interests/${id}/resend-brochure`);
+  return response.data.data;
+};
+
+export const deleteInterests = async (ids: string[]) => {
+  const response = await api.delete("/interests", { data: { ids } });
+  return response.data;
+};
+
+export const hardDeleteInterest = async (id: string) => {
+  const response = await api.post(`/interests/${id}/hard-delete`);
   return response.data;
 };
 
@@ -232,6 +277,26 @@ export const getTrainingPlanRequests = async (params: {
   return response.data;
 };
 
+export const createTrainingPlanManual = async (payload: any) => {
+  const response = await api.post("/training-plan", payload);
+  return response.data.data;
+};
+
+export const resendTrainingPlan = async (id: string) => {
+  const response = await api.post(`/training-plan/${id}/resend`);
+  return response.data.data;
+};
+
+export const deleteTrainingPlans = async (ids: string[]) => {
+  const response = await api.delete("/training-plan", { data: { ids } });
+  return response.data;
+};
+
+export const hardDeleteTrainingPlan = async (id: string) => {
+  const response = await api.post(`/training-plan/${id}/hard-delete`);
+  return response.data;
+};
+
 // --- Audit Logs ---
 export const getAuditLogs = async (
   filters?: AuditLogFilters,
@@ -239,6 +304,7 @@ export const getAuditLogs = async (
   const backendFilters = {
     ...filters,
     pageSize: filters?.limit,
+    entity_type: filters?.entityType,
   };
   const response = await api.get("/audit-logs", { params: backendFilters });
 

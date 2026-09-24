@@ -1,41 +1,166 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getTaxonomies, api, createCourse, updateCourse } from "../lib/api";
-import type { TaxonomyItem, CourseSchedule } from "../lib/api";
+import type { TaxonomyItem, CourseFormPayload } from "../lib/api";
+import { courseFormSchema, type CourseFormValues } from "../validators/courseFormSchema";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
+
+function SortableDay({
+  id,
+  dayIndex,
+  control,
+  register,
+  errors,
+  removeDay,
+}: {
+  id: string;
+  dayIndex: number;
+  control: any;
+  register: any;
+  errors: any;
+  removeDay: (index: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `course_outline.${dayIndex}.modules`,
+  });
+
+  return (
+    <div ref={setNodeRef} style={style} className="bg-gray-50 border rounded-lg p-4 mb-4 relative">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
+            <GripVertical size={20} />
+          </div>
+          <h5 className="font-semibold text-gray-700">Day {dayIndex + 1}</h5>
+        </div>
+        <button type="button" onClick={() => removeDay(dayIndex)} className="text-red-500 hover:text-red-700">
+          <Trash2 size={18} />
+        </button>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Day Title</label>
+        <input
+          {...register(`course_outline.${dayIndex}.title` as const)}
+          className="w-full border border-gray-300 rounded-md p-2"
+          placeholder="e.g. Introduction to Leadership"
+        />
+        {errors?.course_outline?.[dayIndex]?.title && (
+          <p className="mt-1 text-sm text-red-600">{errors.course_outline[dayIndex].title.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-3 pl-6 border-l-2 border-indigo-100">
+        <h6 className="text-sm font-medium text-gray-600">Modules</h6>
+        {fields.map((moduleField, mIndex) => (
+          <div key={moduleField.id} className="bg-white border rounded p-3 relative flex gap-4 items-start">
+            <div className="flex-1 space-y-2">
+              <div>
+                <input
+                  {...register(`course_outline.${dayIndex}.modules.${mIndex}.title` as const)}
+                  className="w-full border border-gray-300 rounded p-1.5 text-sm"
+                  placeholder="Module Title"
+                />
+                {errors?.course_outline?.[dayIndex]?.modules?.[mIndex]?.title && (
+                  <p className="mt-1 text-xs text-red-600">{errors.course_outline[dayIndex].modules[mIndex].title.message}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  {...register(`course_outline.${dayIndex}.modules.${mIndex}.duration` as const)}
+                  className="w-1/4 border border-gray-300 rounded p-1.5 text-sm"
+                  placeholder="Duration (e.g. 2h)"
+                />
+                <input
+                  {...register(`course_outline.${dayIndex}.modules.${mIndex}.description` as const)}
+                  className="w-3/4 border border-gray-300 rounded p-1.5 text-sm"
+                  placeholder="Short Description"
+                />
+              </div>
+            </div>
+            <button type="button" onClick={() => remove(mIndex)} className="text-red-400 hover:text-red-600 pt-1">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => append({ title: "", description: "", duration: "" })}
+          className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+        >
+          <Plus size={16} /> Add Module
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function CourseForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [description, setDescription] = useState("");
-  const [objectives, setObjectives] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
-  const [isPublished, setIsPublished] = useState(false);
-  const [isPublic, setIsPublic] = useState(false);
-  const [isBlended, setIsBlended] = useState(false);
-  const [courseStatus, setCourseStatus] = useState<"active" | "archived">(
-    "active",
-  );
-  const [shortCode, setShortCode] = useState("");
-  const [cost, setCost] = useState<number | "">("");
-  const [duration, setDuration] = useState("");
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<CourseFormValues>({
+    resolver: zodResolver(courseFormSchema) as any,
+    defaultValues: {
+      is_published: false,
+      is_public: false,
+      status: "active",
+      category_ids: [],
+      city_ids: [],
+      association_ids: [],
+      delivery_mode_ids: [],
+      schedules: [],
+      course_outline: [],
+    },
+  });
 
-  const [categoryIds, setCategoryIds] = useState<string[]>([]);
-  const [cityIds, setCityIds] = useState<string[]>([]);
-  const [associationIds, setAssociationIds] = useState<string[]>([]);
-  const [deliveryModeIds, setDeliveryModeIds] = useState<string[]>([]);
+  const { fields: outlineFields, append: appendDay, remove: removeDay, move: moveDay } = useFieldArray({
+    control,
+    name: "course_outline",
+  });
 
-  const [schedules, setSchedules] = useState<CourseSchedule[]>([]);
+  const { fields: scheduleFields, append: appendSchedule, remove: removeSchedule } = useFieldArray({
+    control,
+    name: "schedules",
+  });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [brochureFile, setBrochureFile] = useState<File | null>(null);
+  const [brochureError, setBrochureError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
-
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
     cities: TaxonomyItem[];
@@ -43,61 +168,46 @@ export default function CourseForm() {
     delivery_modes: TaxonomyItem[];
   } | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   useEffect(() => {
     getTaxonomies().then(setTaxonomies).catch(console.error);
 
     if (isEdit) {
-      api
-        .get(`/courses/${id}`)
-        .then((res) => {
-          const course = res.data.data;
-          setTitle(course.title);
-          setSlug(course.slug || "");
-          setSlugTouched(true);
-          setDescription(course.description || "");
-          setObjectives(course.objectives || "");
-          setTargetAudience(course.target_audience || "");
-          setIsPublished(course.is_published);
-          setIsPublic(course.is_public || false);
-          setIsBlended(course.is_blended || false);
-          setCourseStatus((course.status as "active" | "archived") || "active");
-          setShortCode(course.short_code || "");
-          setCost(course.cost ?? "");
-          setDuration(course.duration || "");
-          setCategoryIds(course.categories?.map((c: any) => c.id) || []);
-          setCityIds(course.cities?.map((c: any) => c.id) || []);
-          setAssociationIds(course.associations?.map((c: any) => c.id) || []);
-          setDeliveryModeIds(
-            course.delivery_modes?.map((c: any) => c.id) || [],
-          );
-          setSchedules(course.course_schedules || []);
-          setImageUrl(course.image_url || null);
-        })
-        .catch(console.error);
+      api.get(`/courses/${id}`).then((res) => {
+        const course = res.data.data;
+        reset({
+          title: course.title,
+          slug: course.slug || "",
+          short_code: course.short_code || "",
+          description: course.description || "",
+          objectives: course.objectives || "",
+          target_audience: course.target_audience || "",
+          is_published: course.is_published,
+          is_public: course.is_public || false,
+          status: (course.status as "active" | "archived") || "active",
+          cost: course.cost ?? undefined,
+          category_ids: course.categories?.map((c: any) => c.id) || [],
+          city_ids: course.cities?.map((c: any) => c.id) || [],
+          association_ids: course.associations?.map((c: any) => c.id) || [],
+          delivery_mode_ids: course.delivery_modes?.map((c: any) => c.id) || [],
+          schedules: course.course_schedules || [],
+          course_outline: course.course_outline || [],
+          brochure_url: course.brochure_url || null,
+        });
+        setImageUrl(course.image_url || null);
+      }).catch(console.error);
     }
-  }, [id, isEdit]);
-
-  const handleSelectMultiple = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-    setter: (val: string[]) => void,
-  ) => {
-    const options = Array.from(e.target.selectedOptions);
-    setter(options.map((o) => o.value));
-  };
+  }, [id, isEdit, reset]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.type !== "image/jpeg") {
-      setImageError("Only JPG images are allowed.");
-      return;
-    }
-    if (file.size > 1 * 1024 * 1024) {
-      setImageError("Image size must be less than 1MB.");
-      return;
-    }
-
+    if (file.type !== "image/jpeg") return setImageError("Only JPG allowed");
+    if (file.size > 1 * 1024 * 1024) return setImageError("Max size 1MB");
     setImageError(null);
     setImageFile(file);
     const reader = new FileReader();
@@ -105,100 +215,67 @@ export default function CourseForm() {
     reader.readAsDataURL(file);
   };
 
-  const addSchedule = () => {
-    setSchedules([
-      ...schedules,
-      {
-        start_date: "",
-        end_date: "",
-        location: "",
-        method: "",
-        status: "open",
-      },
-    ]);
+  const handleBrochureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") return setBrochureError("Only PDF allowed");
+    if (file.size > 20 * 1024 * 1024) return setBrochureError("Max size 20MB");
+    setBrochureError(null);
+    setBrochureFile(file);
   };
 
-  const updateSchedule = (
-    index: number,
-    field: keyof CourseSchedule,
-    value: string,
-  ) => {
-    const updated = [...schedules];
-    updated[index] = { ...updated[index], [field]: value };
-    setSchedules(updated);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = outlineFields.findIndex((f) => f.id === active.id);
+      const newIndex = outlineFields.findIndex((f) => f.id === over.id);
+      moveDay(oldIndex, newIndex);
+      // Renumber days
+      const currentOutline = watch("course_outline") || [];
+      const updated = arrayMove(currentOutline, oldIndex, newIndex);
+      updated.forEach((_, index) => {
+        setValue(`course_outline.${index}.day`, index + 1);
+      });
+    }
   };
 
-  const removeSchedule = (index: number) => {
-    setSchedules(schedules.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setImageUploadError(null);
-    const payload = {
-      title,
-      slug: slug || undefined,
-      description,
-      objectives,
-      target_audience: targetAudience,
-      is_published: isPublished,
-      is_public: isPublic,
-      is_blended: isBlended,
-      status: courseStatus,
-      cost: cost === "" ? null : Number(cost),
-      duration: duration || null,
-      category_ids: categoryIds,
-      city_ids: cityIds,
-      association_ids: associationIds,
-      delivery_mode_ids: deliveryModeIds,
-      schedules,
-      short_code: shortCode || undefined,
-    };
-
+  const onSubmit = async (values: CourseFormValues) => {
     try {
+      if (!isEdit && !values.slug) {
+        values.slug = values.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+      }
+
       let savedCourse;
-      if (isEdit) {
-        savedCourse = await updateCourse(id as string, payload);
-      } else {
-        savedCourse = await createCourse(payload);
-      }
+      if (isEdit) savedCourse = await updateCourse(id as string, values as any as CourseFormPayload);
+      else savedCourse = await createCourse(values as any as CourseFormPayload);
 
-      if (imageFile && savedCourse.short_code) {
+      if (imageFile || brochureFile) {
         const { supabase } = await import("../lib/supabase");
-        const filename = `${savedCourse.short_code.toLowerCase()}.jpg`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("course-images")
-          .upload(filename, imageFile, {
-            upsert: true,
-            contentType: "image/jpeg",
-          });
-
-        if (uploadError) {
-          throw new Error("Image upload failed: " + uploadError.message);
+        let updatePayload: any = {};
+        
+        if (imageFile && savedCourse.short_code) {
+          const filename = `${savedCourse.short_code.toLowerCase()}.jpg`;
+          const { error } = await supabase.storage.from("course-images").upload(filename, imageFile, { upsert: true, contentType: "image/jpeg" });
+          if (error) throw error;
+          const { data } = supabase.storage.from("course-images").getPublicUrl(filename);
+          updatePayload.image_url = data.publicUrl;
         }
 
-        const { data: publicUrlData } = supabase.storage
-          .from("course-images")
-          .getPublicUrl(filename);
+        if (brochureFile && savedCourse.short_code) {
+          const filename = `${savedCourse.short_code.toLowerCase()}_brochure.pdf`;
+          const { error } = await supabase.storage.from("course-images").upload(filename, brochureFile, { upsert: true, contentType: "application/pdf" }); // Using course-images bucket for all assets for simplicity or create course-brochures
+          if (error) throw error;
+          const { data } = supabase.storage.from("course-images").getPublicUrl(filename);
+          updatePayload.brochure_url = data.publicUrl;
+        }
 
-        // Re-update course with the image URL if it's the first time
-        if (savedCourse.image_url !== publicUrlData.publicUrl) {
-          await updateCourse(savedCourse.id, {
-            ...payload,
-            image_url: publicUrlData.publicUrl,
-          });
+        if (Object.keys(updatePayload).length > 0) {
+          await updateCourse(savedCourse.id, { ...values, ...updatePayload });
         }
       }
-
       navigate("/courses");
     } catch (err: any) {
-      console.error(err);
-      if (err.message && err.message.includes("Image upload failed")) {
-        setImageUploadError("Image upload failed: " + err.message);
-      } else {
-        alert("Failed to save course: " + (err.message || ""));
-      }
+      alert("Failed to save course: " + (err.message || ""));
     }
   };
 
@@ -207,250 +284,81 @@ export default function CourseForm() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-semibold">
-          {isEdit ? "Edit Course" : "Add Course"}
-        </h3>
-        <button
-          onClick={() => navigate("/courses")}
-          className="text-sm font-medium text-gray-500 hover:text-gray-700"
-        >
-          Cancel
-        </button>
+        <h3 className="text-2xl font-semibold">{isEdit ? "Edit Course" : "Add Course"}</h3>
+        <button onClick={() => navigate("/courses")} className="text-sm font-medium text-gray-500">Cancel</button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow rounded-lg p-6 space-y-8"
-      >
+      <form onSubmit={handleSubmit(onSubmit as any)} className="bg-white shadow rounded-lg p-6 space-y-8">
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Basic Info</h4>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course Code
-            </label>
-            <input
-              value={shortCode}
-              onChange={(e) => setShortCode(e.target.value)}
-              placeholder="e.g. PX-LEAD-001"
-              className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Used as the image filename in storage. Leave blank to auto-assign.
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
+            <input {...register("short_code")} className="w-full border border-gray-300 rounded-md p-2 font-mono text-sm" />
+            {errors.short_code && <p className="text-sm text-red-600">{errors.short_code.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
-            </label>
-            <input
-              required
-              type="text"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (!isEdit && !slugTouched) {
-                  setSlug(
-                    e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9]+/g, "-")
-                      .replace(/(^-|-$)+/g, ""),
-                  );
-                }
-              }}
-              className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Slug (URL)
-            </label>
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => {
-                setSlug(e.target.value);
-                setSlugTouched(true);
-              }}
-              placeholder="Auto-generated if left blank"
-              className="w-full border border-gray-300 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input {...register("title")} className="w-full border border-gray-300 rounded-md p-2" />
+            {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course Image
-            </label>
-            <div className="flex items-start space-x-4">
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/jpeg"
-                  onChange={handleImageChange}
-                  className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Only JPG format. Max size 1MB.
-                </p>
-                {imageError && (
-                  <p className="mt-1 text-sm text-red-600">{imageError}</p>
-                )}
-                {imageUploadError && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {imageUploadError}
-                  </p>
-                )}
-              </div>
-              {imageUrl && (
-                <div className="w-32 h-24 relative rounded-md border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+            <input {...register("slug")} className="w-full border border-gray-300 rounded-md p-2 font-mono text-sm" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Course Image</label>
+              <input type="file" accept="image/jpeg" onChange={handleImageChange} className="w-full border rounded p-2 text-sm" />
+              {imageError && <p className="text-sm text-red-600">{imageError}</p>}
+              {imageUrl && <img src={imageUrl} alt="preview" className="mt-2 w-32 h-24 object-cover rounded" />}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Course Brochure (PDF)</label>
+              <input type="file" accept="application/pdf" onChange={handleBrochureChange} className="w-full border rounded p-2 text-sm" />
+              {brochureError && <p className="text-sm text-red-600">{brochureError}</p>}
+              {watch("brochure_url") && !brochureFile && (
+                <p className="mt-1 text-sm text-indigo-600"><a href={watch("brochure_url") as string} target="_blank" rel="noreferrer">View Current Brochure</a></p>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full border border-gray-300 rounded-md p-2"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea {...register("description")} rows={3} className="w-full border rounded p-2" />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Objectives
-              </label>
-              <textarea
-                value={objectives}
-                onChange={(e) => setObjectives(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Target Audience
-              </label>
-              <textarea
-                value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cost
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={cost}
-                onChange={(e) =>
-                  setCost(e.target.value ? Number(e.target.value) : "")
-                }
-                className="w-full border border-gray-300 rounded-md p-2"
-                placeholder="e.g. 500.00"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Duration
-              </label>
-              <input
-                type="text"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full border border-gray-300 rounded-md p-2"
-                placeholder="e.g. 3 Months"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+            <input type="number" step="0.01" {...register("cost")} className="w-full border rounded p-2" />
+            {errors.cost && <p className="text-sm text-red-600">{errors.cost.message}</p>}
           </div>
         </section>
 
         <section className="space-y-4">
-          <h4 className="font-medium text-lg border-b pb-2">
-            Taxonomies (Hold Cmd/Ctrl to select multiple)
-          </h4>
+          <h4 className="font-medium text-lg border-b pb-2">Taxonomies</h4>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categories
-              </label>
-              <select
-                multiple
-                value={categoryIds}
-                onChange={(e) => handleSelectMultiple(e, setCategoryIds)}
-                className="w-full h-32 border border-gray-300 rounded-md p-2"
-              >
-                {taxonomies.categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+              <select multiple value={watch("category_ids")} onChange={(e) => setValue("category_ids", Array.from(e.target.selectedOptions).map(o => o.value))} className="w-full h-32 border rounded p-2">
+                {taxonomies.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cities
-              </label>
-              <select
-                multiple
-                value={cityIds}
-                onChange={(e) => handleSelectMultiple(e, setCityIds)}
-                className="w-full h-32 border border-gray-300 rounded-md p-2"
-              >
-                {taxonomies.cities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cities</label>
+              <select multiple value={watch("city_ids")} onChange={(e) => setValue("city_ids", Array.from(e.target.selectedOptions).map(o => o.value))} className="w-full h-32 border rounded p-2">
+                {taxonomies.cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Associations
-              </label>
-              <select
-                multiple
-                value={associationIds}
-                onChange={(e) => handleSelectMultiple(e, setAssociationIds)}
-                className="w-full h-32 border border-gray-300 rounded-md p-2"
-              >
-                {taxonomies.associations.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Associations</label>
+              <select multiple value={watch("association_ids")} onChange={(e) => setValue("association_ids", Array.from(e.target.selectedOptions).map(o => o.value))} className="w-full h-32 border rounded p-2">
+                {taxonomies.associations.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Delivery Modes
-              </label>
-              <select
-                multiple
-                value={deliveryModeIds}
-                onChange={(e) => handleSelectMultiple(e, setDeliveryModeIds)}
-                className="w-full h-32 border border-gray-300 rounded-md p-2"
-              >
-                {taxonomies.delivery_modes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Modes</label>
+              <select multiple value={watch("delivery_mode_ids")} onChange={(e) => setValue("delivery_mode_ids", Array.from(e.target.selectedOptions).map(o => o.value))} className="w-full h-32 border rounded p-2">
+                {taxonomies.delivery_modes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>
@@ -458,150 +366,61 @@ export default function CourseForm() {
 
         <section className="space-y-4">
           <div className="flex justify-between items-center border-b pb-2">
+            <h4 className="font-medium text-lg">Course Outline</h4>
+            <button type="button" onClick={() => appendDay({ day: outlineFields.length + 1, title: "", modules: [] })} className="text-sm bg-gray-100 px-3 py-1 rounded">
+              + Add Day
+            </button>
+          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={outlineFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+              {outlineFields.map((field, index) => (
+                <SortableDay
+                  key={field.id}
+                  id={field.id}
+                  dayIndex={index}
+                  control={control}
+                  register={register}
+                  errors={errors}
+                  removeDay={removeDay}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex justify-between items-center border-b pb-2">
             <h4 className="font-medium text-lg">Schedules</h4>
-            <button
-              type="button"
-              onClick={addSchedule}
-              className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
-            >
+            <button type="button" onClick={() => appendSchedule({ start_date: "", end_date: "", location: "", method: "", status: "open" })} className="text-sm bg-gray-100 px-3 py-1 rounded">
               + Add Schedule
             </button>
           </div>
-          {schedules.length === 0 ? (
-            <p className="text-gray-500 text-sm">No schedules added.</p>
-          ) : (
-            <div className="space-y-3">
-              {schedules.map((schedule, i) => (
-                <div
-                  key={i}
-                  className="flex gap-2 items-center bg-gray-50 p-2 rounded"
-                >
-                  <input
-                    type="date"
-                    required
-                    value={schedule.start_date.split("T")[0]}
-                    onChange={(e) =>
-                      updateSchedule(i, "start_date", e.target.value)
-                    }
-                    className="border p-1 rounded text-sm w-full"
-                    placeholder="Start Date"
-                  />
-                  <input
-                    type="date"
-                    value={schedule.end_date?.split("T")[0] || ""}
-                    onChange={(e) =>
-                      updateSchedule(i, "end_date", e.target.value)
-                    }
-                    className="border p-1 rounded text-sm w-full"
-                    placeholder="End Date"
-                  />
-                  <input
-                    type="text"
-                    value={schedule.location || ""}
-                    onChange={(e) =>
-                      updateSchedule(i, "location", e.target.value)
-                    }
-                    className="border p-1 rounded text-sm w-full"
-                    placeholder="Location"
-                  />
-                  <input
-                    type="text"
-                    value={schedule.method || ""}
-                    onChange={(e) =>
-                      updateSchedule(i, "method", e.target.value)
-                    }
-                    className="border p-1 rounded text-sm w-full"
-                    placeholder="Method"
-                  />
-                  <select
-                    value={schedule.status}
-                    onChange={(e) =>
-                      updateSchedule(i, "status", e.target.value)
-                    }
-                    className="border p-1 rounded text-sm w-full"
-                  >
-                    <option value="open">Open</option>
-                    <option value="guaranteed">Guaranteed</option>
-                    <option value="filling_fast">Filling Fast</option>
-                    <option value="closed">Closed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => removeSchedule(i)}
-                    className="text-red-500 hover:text-red-700 px-2"
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="space-y-3">
+            {scheduleFields.map((field, i) => (
+              <div key={field.id} className="flex gap-2 items-center bg-gray-50 p-2 rounded">
+                <input type="date" {...register(`schedules.${i}.start_date` as const)} required className="border p-1 rounded text-sm w-full" />
+                <input type="date" {...register(`schedules.${i}.end_date` as const)} className="border p-1 rounded text-sm w-full" />
+                <input type="text" {...register(`schedules.${i}.location` as const)} placeholder="Location" className="border p-1 rounded text-sm w-full" />
+                <input type="text" {...register(`schedules.${i}.method` as const)} placeholder="Method" className="border p-1 rounded text-sm w-full" />
+                <select {...register(`schedules.${i}.status` as const)} className="border p-1 rounded text-sm w-full">
+                  <option value="open">Open</option><option value="guaranteed">Guaranteed</option>
+                  <option value="filling_fast">Filling Fast</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option>
+                </select>
+                <button type="button" onClick={() => removeSchedule(i)} className="text-red-500">&times;</button>
+              </div>
+            ))}
+          </div>
         </section>
 
         <div className="flex flex-col space-y-4 pt-4 border-t">
           <div className="flex items-center space-x-6">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="published"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="published"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Published
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="is_public"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="is_public"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Public (visible on homepage)
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="is_blended"
-                checked={isBlended}
-                onChange={(e) => setIsBlended(e.target.checked)}
-                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="is_blended"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Blended (online + in-person option)
-              </label>
-            </div>
+            <label className="flex items-center gap-2"><input type="checkbox" {...register("is_published")} /> Published</label>
+            <label className="flex items-center gap-2"><input type="checkbox" {...register("is_public")} /> Public</label>
           </div>
-
           {isEdit && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Status
-              </label>
-              <select
-                value={courseStatus}
-                onChange={(e) =>
-                  setCourseStatus(e.target.value as "active" | "archived")
-                }
-                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select {...register("status")} className="rounded border-gray-300 p-2 text-sm">
                 <option value="active">Active</option>
                 <option value="archived">Archived</option>
               </select>
@@ -610,10 +429,7 @@ export default function CourseForm() {
         </div>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
-          >
+          <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
             Save Course
           </button>
         </div>

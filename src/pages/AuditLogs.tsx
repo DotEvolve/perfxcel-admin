@@ -46,6 +46,22 @@ export default function AuditLogs() {
                 className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
+            <div className="relative">
+              <select
+                value={filters.entityType || ""}
+                onChange={(e) =>
+                  setFilters({ entityType: e.target.value || undefined })
+                }
+                className="w-full py-2 pl-3 pr-8 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+              >
+                <option value="">All Entities</option>
+                <option value="course">Course</option>
+                <option value="course_interest">Interest</option>
+                <option value="enrollments">Enrollment</option>
+                <option value="training_plan_requests">Training Plan</option>
+                <option value="enquiries">Enquiry</option>
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="date"
@@ -101,6 +117,9 @@ export default function AuditLogs() {
                 <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Resource ID
                 </th>
+                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Details
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -142,6 +161,21 @@ export default function AuditLogs() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
                       {log.resourceId || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {log.metadata && Object.keys(log.metadata).length > 0 ? (
+                        <details className="group">
+                          <summary className="cursor-pointer text-indigo-600 hover:text-indigo-800 font-medium list-none flex items-center gap-1">
+                            <span className="group-open:hidden">View Details</span>
+                            <span className="hidden group-open:inline">Hide Details</span>
+                          </summary>
+                          <pre className="mt-2 p-2 bg-gray-50 rounded border text-xs overflow-x-auto max-w-sm whitespace-pre-wrap">
+                            {JSON.stringify(log.metadata, null, 2)}
+                          </pre>
+                        </details>
+                      ) : (
+                        <span className="text-gray-400 italic">None</span>
+                      )}
                     </td>
                   </tr>
                 ))

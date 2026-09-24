@@ -14,6 +14,7 @@ export interface AuditLogFilters {
   page?: number;
   limit?: number;
   action?: string;
+  entityType?: string;
   from?: string;
   to?: string;
 }

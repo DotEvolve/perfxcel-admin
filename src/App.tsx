@@ -23,6 +23,7 @@ import AuditLogs from "./pages/AuditLogs";
 import Enquiries from "./pages/Enquiries";
 import TrainingPlanRequests from "./pages/TrainingPlanRequests";
 import { ResetPassword } from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
 
 function AuthGuard({
   children,
@@ -107,6 +108,7 @@ function Layout() {
           {navLink("/enquiries", "Enquiries")}
           {navLink("/enrollments", "Enrollments")}
           {navLink("/audit-logs", "Audit Logs")}
+          {navLink("/settings", "Settings")}
         </nav>
       </aside>
 
@@ -191,6 +193,7 @@ export default function App() {
         <Route path="/enquiries" element={<Enquiries />} />
         <Route path="/enrollments" element={<Enrollments />} />
         <Route path="/audit-logs" element={<AuditLogs />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
