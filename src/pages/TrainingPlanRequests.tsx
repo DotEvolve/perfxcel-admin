@@ -7,7 +7,6 @@ import {
   hardDeleteTrainingPlan,
 } from "../lib/api";
 import {
-  Search,
   Trash2,
   Send,
   ShieldX,
@@ -16,6 +15,7 @@ import {
   Download,
 } from "lucide-react";
 import ConfirmationModal from "../components/ConfirmationModal";
+import FilterBar from "../components/FilterBar";
 
 function ManualTrainingPlanModal({
   isOpen,
@@ -153,6 +153,8 @@ export default function TrainingPlanRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
   const limit = 20;
 
@@ -170,12 +172,18 @@ export default function TrainingPlanRequests() {
 
   useEffect(() => {
     fetchRequests();
-  }, [page, search]);
+  }, [page, search, dateFrom, dateTo]);
 
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const data = await getTrainingPlanRequests({ search, page, limit });
+      const data = await getTrainingPlanRequests({
+        search,
+        page,
+        limit,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      });
       setRequests(data.data);
     } catch (err: any) {
       setError(err.message || "Failed to load training plan requests");
@@ -184,11 +192,7 @@ export default function TrainingPlanRequests() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchRequests();
-  };
+  // removed handleSearch
 
   const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -349,28 +353,20 @@ export default function TrainingPlanRequests() {
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search name or email..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md sm:text-sm"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
-            >
-              Search
-            </button>
-          </form>
-        </div>
+        <FilterBar
+          search={search}
+          onSearchChange={(v) => { setSearch(v); setPage(1); }}
+          dateFrom={dateFrom}
+          onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+          dateTo={dateTo}
+          onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+          onClear={() => {
+            setSearch("");
+            setDateFrom("");
+            setDateTo("");
+            setPage(1);
+          }}
+        />
 
         {error && (
           <div className="p-4 bg-red-50 border-l-4 border-red-400">

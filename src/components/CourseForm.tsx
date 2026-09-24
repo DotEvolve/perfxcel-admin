@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getTaxonomies, api, createCourse, updateCourse } from "../lib/api";
+import { getTaxonomies, api, createCourse, updateCourse, uploadCourseBrochure } from "../lib/api";
 import type { TaxonomyItem, CourseFormPayload } from "../lib/api";
 import {
   courseFormSchema,
@@ -251,6 +251,7 @@ export default function CourseForm() {
             slug: course.slug || "",
             short_code: course.short_code || "",
             description: course.description || "",
+            overview: course.overview || null,
             objectives: course.objectives || "",
             target_audience: course.target_audience || "",
             is_published: course.is_published,
@@ -346,18 +347,8 @@ export default function CourseForm() {
         }
 
         if (brochureFile && savedCourse.short_code) {
-          const filename = `${savedCourse.short_code.toLowerCase()}_brochure.pdf`;
-          const { error } = await supabase.storage
-            .from("course-images")
-            .upload(filename, brochureFile, {
-              upsert: true,
-              contentType: "application/pdf",
-            }); // Using course-images bucket for all assets for simplicity or create course-brochures
-          if (error) throw error;
-          const { data } = supabase.storage
-            .from("course-images")
-            .getPublicUrl(filename);
-          updatePayload.brochure_url = data.publicUrl;
+          const result = await uploadCourseBrochure(brochureFile, savedCourse.short_code);
+          updatePayload.brochure_url = result.url;
         }
 
         if (Object.keys(updatePayload).length > 0) {
@@ -516,6 +507,25 @@ export default function CourseForm() {
               className="w-full border rounded p-2"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Overview
+            </label>
+            <textarea
+              {...register("overview")}
+              rows={5}
+              className="w-full border rounded p-2"
+              placeholder="A narrative overview of the course for the public course page..."
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {(watch("overview") ?? "").length}/5000 characters. Displayed at the top of the public course page.
+            </p>
+            {errors.overview && (
+              <p className="mt-1 text-sm text-red-600">{errors.overview.message as string}</p>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cost

@@ -144,6 +144,30 @@ export const updateSettings = async (payload: {
   return response.data;
 };
 
+export const uploadTrainingPlan = async (file: File): Promise<{ url: string }> => {
+  const form = new FormData();
+  form.append("file", file);
+  const response = await api.post("/upload/training-plan", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data.data;
+};
+
+export const downloadTrainingPlanUrl = async (): Promise<string> => {
+  const response = await api.get("/upload/training-plan/download");
+  return response.data.data.signedUrl;
+};
+
+export const uploadCourseBrochure = async (file: File, shortCode: string): Promise<{ url: string; filename: string }> => {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("short_code", shortCode);
+  const response = await api.post("/upload/course-brochure", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data.data;
+};
+
 // Convenience wrapper — updates a single setting key by building the batch payload.
 export const updateSetting = async (key: string, value: number) => {
   return updateSettings({ [key]: value } as Parameters<
@@ -270,6 +294,8 @@ export const getEnquiries = async (params: {
   search?: string;
   page?: number;
   limit?: number;
+  date_from?: string;
+  date_to?: string;
 }) => {
   const response = await api.get("/enquiries", { params });
   return response.data;
@@ -284,6 +310,8 @@ export const getTrainingPlanRequests = async (params: {
   search?: string;
   page?: number;
   limit?: number;
+  date_from?: string;
+  date_to?: string;
 }) => {
   const response = await api.get("/training-plan", { params });
   return response.data;

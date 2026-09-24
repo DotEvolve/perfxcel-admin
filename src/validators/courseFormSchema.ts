@@ -26,6 +26,7 @@ export const courseFormSchema = z.object({
   short_code: z.string().min(1, "Short code is required"),
   slug: z.string().optional(),
   description: z.string().optional(),
+  overview: z.string().trim().max(5000).optional().nullable(),
   objectives: z.string().optional(),
   target_audience: z.string().optional(),
   duration: z.string().optional(),

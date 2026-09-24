@@ -7,6 +7,7 @@ import {
 import type { PaginatedResponse } from "../lib/api";
 import { ChevronUp, ChevronDown, Download } from "lucide-react";
 import Pagination from "../components/Pagination";
+import FilterBar from "../components/FilterBar";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 export interface Enrollment {
@@ -45,6 +46,8 @@ export default function Enrollments() {
   const limit = 20;
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sortField, setSortField] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -54,6 +57,8 @@ export default function Enrollments() {
       const params: any = { page, limit, sort: `${sortField}:${sortOrder}` };
       if (searchQuery) params.search = searchQuery;
       if (statusFilter !== "all") params.status = statusFilter;
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
 
       const data: PaginatedResponse<Enrollment> = await getEnrollments(params);
       setEnrollments(data.data);
@@ -67,7 +72,7 @@ export default function Enrollments() {
 
   useEffect(() => {
     loadEnrollments();
-  }, [page, limit, searchQuery, statusFilter, sortField, sortOrder]);
+  }, [page, limit, searchQuery, statusFilter, sortField, sortOrder, dateFrom, dateTo]);
 
   const executeUpdateStatus = async (id: string, status: string) => {
     setUpdating(id);
@@ -202,32 +207,29 @@ export default function Enrollments() {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search name or email..."
-          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white"
-        >
-          <option value="all">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="in_progress">In Progress</option>
-          <option value="achieved">Achieved</option>
-          <option value="dropped">Dropped</option>
-        </select>
-      </div>
+      <FilterBar
+        search={searchQuery}
+        onSearchChange={(v) => { setSearchQuery(v); setPage(1); }}
+        statusOptions={[
+          { label: "Pending", value: "pending" },
+          { label: "In Progress", value: "in_progress" },
+          { label: "Achieved", value: "achieved" },
+          { label: "Dropped", value: "dropped" }
+        ]}
+        status={statusFilter}
+        onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+        dateFrom={dateFrom}
+        onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+        dateTo={dateTo}
+        onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+        onClear={() => {
+          setSearchQuery("");
+          setStatusFilter("all");
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+      />
 
       <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200 flex flex-col">
         {loading ? (

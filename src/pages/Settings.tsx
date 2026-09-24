@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getSettings, updateSettings } from "../lib/api";
-import { supabase } from "../lib/supabase";
+import { getSettings, updateSettings, uploadTrainingPlan, downloadTrainingPlanUrl } from "../lib/api";
 import { Alert } from "@dotevolve/ui-kit";
 
 export default function Settings() {
@@ -145,10 +144,7 @@ export default function Settings() {
               setUploading(true);
               setMessage(null);
               try {
-                const { error } = await supabase.storage
-                  .from("assets")
-                  .upload("training_plan.pdf", file, { upsert: true });
-                if (error) throw error;
+                await uploadTrainingPlan(file);
                 setMessage({
                   type: "success",
                   text: "Training plan uploaded successfully!",
@@ -176,13 +172,8 @@ export default function Settings() {
             onClick={async () => {
               setDownloading(true);
               try {
-                const { data, error } = await supabase.storage
-                  .from("assets")
-                  .createSignedUrl("training_plan.pdf", 60);
-                if (error) throw error;
-                if (data?.signedUrl) {
-                  window.open(data.signedUrl, "_blank");
-                }
+                const signedUrl = await downloadTrainingPlanUrl();
+                window.open(signedUrl, "_blank");
               } catch (err: any) {
                 setMessage({
                   type: "error",

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Pagination from "../components/Pagination";
 import ConfirmationModal from "../components/ConfirmationModal";
+import FilterBar from "../components/FilterBar";
 
 function ManualInterestModal({
   isOpen,
@@ -198,6 +199,8 @@ export default function Interests() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sortField, setSortField] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -230,6 +233,8 @@ export default function Interests() {
       if (searchQuery) params.search = searchQuery;
       if (statusFilter !== "all") params.status = statusFilter;
       if (courseFilter !== "all") params.course_id = courseFilter;
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
 
       const data: PaginatedResponse<any> = await getInterests(params);
       setInterests(data.data);
@@ -251,6 +256,8 @@ export default function Interests() {
     courseFilter,
     sortField,
     sortOrder,
+    dateFrom,
+    dateTo,
   ]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
@@ -472,38 +479,37 @@ export default function Interests() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Search name, email, company..."
-          className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border"
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setPage(1);
-          }}
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white"
-        >
-          <option value="all">All Statuses</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="enrolled">Enrolled</option>
-          <option value="rejected">Rejected</option>
-        </select>
+      <FilterBar
+        search={searchQuery}
+        onSearchChange={(v) => { setSearchQuery(v); setPage(1); }}
+        statusOptions={[
+          { label: "New", value: "new" },
+          { label: "Contacted", value: "contacted" },
+          { label: "Enrolled", value: "enrolled" },
+          { label: "Rejected", value: "rejected" }
+        ]}
+        status={statusFilter}
+        onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+        dateFrom={dateFrom}
+        onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+        dateTo={dateTo}
+        onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+        onClear={() => {
+          setSearchQuery("");
+          setStatusFilter("all");
+          setCourseFilter("all");
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+      >
         <select
           value={courseFilter}
           onChange={(e) => {
             setCourseFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2 px-3 border bg-white max-w-xs"
+          className="border border-gray-300 rounded-md text-sm py-2 px-3 bg-white focus:ring-indigo-500 focus:border-indigo-500 max-w-[250px]"
         >
           <option value="all">All Courses</option>
           {courses.map((c) => (
@@ -512,7 +518,7 @@ export default function Interests() {
             </option>
           ))}
         </select>
-      </div>
+      </FilterBar>
 
       <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-200 flex flex-col">
         {loading ? (
