@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getSettings, updateSettings, uploadTrainingPlan, downloadTrainingPlanUrl } from "../lib/api";
+import { getSettings, updateSettings, uploadTrainingPlan, downloadTrainingPlanFile } from "../lib/api";
 import { Alert } from "@dotevolve/ui-kit";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -182,8 +182,7 @@ export default function Settings() {
             onClick={async () => {
               setDownloading(true);
               try {
-                const signedUrl = await downloadTrainingPlanUrl();
-                window.open(signedUrl, "_blank");
+                await downloadTrainingPlanFile();
               } catch (err: any) {
                 setMessage({
                   type: "error",
