@@ -22,7 +22,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2, Download } from "lucide-react";
 
 function SortableDay({
   id,
@@ -150,6 +150,21 @@ export default function CourseForm() {
     control,
     name: "course_outline",
   });
+
+  const forceDownload = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch(e) {
+      window.open(url, '_blank');
+    }
+  };
 
   const { fields: scheduleFields, append: appendSchedule, remove: removeSchedule } = useFieldArray({
     control,
@@ -311,14 +326,36 @@ export default function CourseForm() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Course Image</label>
               <input type="file" accept="image/jpeg" onChange={handleImageChange} className="w-full border rounded p-2 text-sm" />
               {imageError && <p className="text-sm text-red-600">{imageError}</p>}
-              {imageUrl && <img src={imageUrl} alt="preview" className="mt-2 w-32 h-24 object-cover rounded" />}
+              {imageUrl && (
+                <div className="mt-2 flex items-start gap-4">
+                  <img src={imageUrl} alt="preview" className="w-32 h-24 object-cover rounded" />
+                  <button 
+                    type="button" 
+                    onClick={() => forceDownload(imageUrl, `course_image_${watch("short_code") || "img"}.jpg`)}
+                    className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download Image
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Course Brochure (PDF)</label>
               <input type="file" accept="application/pdf" onChange={handleBrochureChange} className="w-full border rounded p-2 text-sm" />
               {brochureError && <p className="text-sm text-red-600">{brochureError}</p>}
               {watch("brochure_url") && !brochureFile && (
-                <p className="mt-1 text-sm text-indigo-600"><a href={watch("brochure_url") as string} target="_blank" rel="noreferrer">View Current Brochure</a></p>
+                <div className="mt-2 flex gap-4">
+                  <a href={watch("brochure_url") as string} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 hover:underline">View Current Brochure</a>
+                  <button 
+                    type="button" 
+                    onClick={() => forceDownload(watch("brochure_url") as string, `course_brochure_${watch("short_code") || "doc"}.pdf`)}
+                    className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download Brochure
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -10,7 +10,6 @@ import {
 } from "react-router-dom";
 import CourseForm from "./components/CourseForm";
 import { supabase } from "./lib/supabase";
-import { getMetrics } from "./lib/api";
 import auditLogger from "./lib/audit";
 import type { Session } from "@supabase/supabase-js";
 import { Login } from "./pages/Login";
@@ -24,6 +23,25 @@ import Enquiries from "./pages/Enquiries";
 import TrainingPlanRequests from "./pages/TrainingPlanRequests";
 import { ResetPassword } from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
+
+/**
+ * Returns true if the session's JWT app_metadata grants access to the
+ * 'perfxcel' app. The portal's buildAndWrite() populates activeAppAccess
+ * with the app slugs assigned to the user for their active tenant.
+ * This is the same signal that drives app-card visibility in the portal —
+ * no extra HTTP call required.
+ */
+function hasPerfxcelAccess(session: Session): boolean {
+  const meta = session.user.app_metadata as {
+    activeAppAccess?: string[];
+    role?: string;
+  };
+  // Super-admins always have access
+  if (meta?.role === "super-admin") return true;
+  // Regular users must have 'perfxcel' in their active app access list
+  return Array.isArray(meta?.activeAppAccess) &&
+    meta.activeAppAccess.includes("perfxcel");
+}
 
 function AuthGuard({
   children,
@@ -139,10 +157,14 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        try {
-          await getMetrics();
+        // Check access via the JWT claim that the portal populates via buildAndWrite().
+        // activeAppAccess is the authoritative list of app slugs the user can access
+        // for their active tenant — the same claim that drives app-card visibility in
+        // the portal. No extra HTTP call needed.
+        const hasAccess = hasPerfxcelAccess(session);
+        if (hasAccess) {
           setSession(session);
-        } catch (err) {
+        } else {
           await supabase.auth.signOut();
           setSession(null);
         }
@@ -155,6 +177,11 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Re-evaluate access on every auth state change (token refresh, sign-in, etc.)
+      if (session && !hasPerfxcelAccess(session)) {
+        supabase.auth.signOut();
+        return;
+      }
       setSession(session);
     });
 

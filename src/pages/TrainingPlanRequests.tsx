@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getTrainingPlanRequests, createTrainingPlanManual, resendTrainingPlan, deleteTrainingPlans, hardDeleteTrainingPlan } from "../lib/api";
-import { Search, Trash2, Send, ShieldX, ShieldOff, Plus } from "lucide-react";
+import { Search, Trash2, Send, ShieldX, ShieldOff, Plus, Download } from "lucide-react";
 import ConfirmationModal from "../components/ConfirmationModal";
 
 function ManualTrainingPlanModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
@@ -170,6 +170,51 @@ export default function TrainingPlanRequests() {
     }
   };
 
+  const handleDownloadCSV = async () => {
+    try {
+      const res = await getTrainingPlanRequests({ search, limit: 10000 });
+      if (res.data.length === 0) {
+        alert("No data to download.");
+        return;
+      }
+
+      const headers = ["Date", "Name", "Email", "Mobile", "Company", "Designation", "Status", "Expiration"];
+      const csvContent = [
+        headers.join(","),
+        ...res.data.map((req: any) => {
+          const date = new Date(req.created_at).toLocaleDateString();
+          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+          const status = req.is_hard_deleted ? "Erased" : "Active";
+          const expiration = new Date(req.expires_at) < new Date() ? "Expired" : "Valid";
+
+          return [
+            date,
+            escapeCSV(req.is_hard_deleted ? "Erased" : req.name),
+            escapeCSV(req.email),
+            escapeCSV(req.mobile),
+            escapeCSV(req.company),
+            escapeCSV(req.designation),
+            status,
+            expiration,
+          ].join(",");
+        }),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `training_plan_requests_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download CSV");
+    }
+  };
+
 
 
   return (
@@ -192,6 +237,13 @@ export default function TrainingPlanRequests() {
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Request
+          </button>
+          <button
+            onClick={handleDownloadCSV}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            CSV
           </button>
         </div>
       </div>

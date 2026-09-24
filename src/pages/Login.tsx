@@ -1,8 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { getMetrics } from "../lib/api";
 import auditLogger from "../lib/audit";
+import type { Session } from "@supabase/supabase-js";
+
+/**
+ * Checks whether the signed-in session has access to the 'perfxcel' app
+ * via the platform's JWT app_metadata claim.
+ */
+function hasPerfxcelAccess(session: Session): boolean {
+  const meta = session.user.app_metadata as {
+    activeAppAccess?: string[];
+    role?: string;
+  };
+  if (meta?.role === "super-admin") return true;
+  return Array.isArray(meta?.activeAppAccess) &&
+    meta.activeAppAccess.includes("perfxcel");
+}
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -24,31 +38,32 @@ export function Login() {
       setError(error.message);
       setLoading(false);
     } else if (data.session) {
-      try {
-        // Verify tenant membership by calling a protected endpoint
-        await getMetrics();
-        const u = data.session.user;
-        const tenantId = u.app_metadata?.activeTenantId;
-        if (tenantId) {
-          auditLogger.track({
-            tenantId: tenantId,
-            action: "USER_LOGIN",
-            actorId: u.id,
-            actorType: "user",
-            details: { email: u.email },
-            timestamp: new Date().toISOString(),
-          });
-          if (typeof (auditLogger as any).flush === "function") {
-            await (auditLogger as any).flush();
-          }
-        }
-        setLoading(false);
-        navigate("/");
-      } catch (err: any) {
+      // Check access via JWT claim — no extra HTTP round-trip needed.
+      // The portal's buildAndWrite() populates activeAppAccess when a user is
+      // assigned to an app. If 'perfxcel' is not in that list, block sign-in.
+      if (!hasPerfxcelAccess(data.session)) {
         await supabase.auth.signOut();
-        setError("Access restricted to PerfXcel tenant admins.");
+        setError("Access restricted. You are not assigned to the PerfXcel app.");
         setLoading(false);
+        return;
       }
+      const u = data.session.user;
+      const tenantId = u.app_metadata?.activeTenantId;
+      if (tenantId) {
+        auditLogger.track({
+          tenantId: tenantId,
+          action: "USER_LOGIN",
+          actorId: u.id,
+          actorType: "user",
+          details: { email: u.email },
+          timestamp: new Date().toISOString(),
+        });
+        if (typeof (auditLogger as any).flush === "function") {
+          await (auditLogger as any).flush();
+        }
+      }
+      setLoading(false);
+      navigate("/");
     } else {
       setError("Please check your email to confirm your account.");
       setLoading(false);

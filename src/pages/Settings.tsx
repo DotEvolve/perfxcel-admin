@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getSettings, updateSetting } from "../lib/api";
+import { supabase } from "../lib/supabase";
 import { Alert } from "@dotevolve/ui-kit";
 
 export default function Settings() {
@@ -7,6 +8,9 @@ export default function Settings() {
   const [brochureExpiry, setBrochureExpiry] = useState<number | "">("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -90,6 +94,64 @@ export default function Settings() {
           </button>
         </div>
       </form>
+
+      <div className="mt-8 bg-white shadow rounded-lg p-6 space-y-6">
+        <h3 className="text-lg font-medium">Training Plan Document</h3>
+        <p className="text-sm text-gray-500">Upload a new master training plan document (PDF) to replace the existing one.</p>
+        
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setUploading(true);
+              setMessage(null);
+              try {
+                const { error } = await supabase.storage.from("assets").upload("training_plan.pdf", file, { upsert: true });
+                if (error) throw error;
+                setMessage({ type: "success", text: "Training plan uploaded successfully!" });
+              } catch (err: any) {
+                setMessage({ type: "error", text: err.message || "Failed to upload training plan." });
+              } finally {
+                setUploading(false);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }
+            }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="px-4 py-2 border border-indigo-600 text-indigo-600 rounded-md text-sm font-medium hover:bg-indigo-50 disabled:opacity-50"
+          >
+            {uploading ? "Uploading..." : "Upload New Plan"}
+          </button>
+
+          <button
+            onClick={async () => {
+              setDownloading(true);
+              try {
+                const { data, error } = await supabase.storage.from("assets").createSignedUrl("training_plan.pdf", 60);
+                if (error) throw error;
+                if (data?.signedUrl) {
+                  window.open(data.signedUrl, "_blank");
+                }
+              } catch (err: any) {
+                setMessage({ type: "error", text: err.message || "Failed to download." });
+              } finally {
+                setDownloading(false);
+              }
+            }}
+            disabled={downloading}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
+          >
+            {downloading ? "Generating link..." : "Download Current Plan"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
