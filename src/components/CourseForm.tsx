@@ -8,6 +8,8 @@ import {
   courseFormSchema,
   type CourseFormValues,
 } from "../validators/courseFormSchema";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   DndContext,
   closestCenter,
@@ -512,11 +514,16 @@ export default function CourseForm() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Course Overview
             </label>
-            <textarea
-              {...register("overview")}
-              rows={5}
-              className="w-full border rounded p-2"
-              placeholder="A narrative overview of the course for the public course page..."
+            <ReactQuill
+              theme="snow"
+              value={watch("overview") ?? ""}
+              onChange={(value) => {
+                setValue("overview", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                });
+              }}
+              className="bg-white"
             />
             <p className="mt-1 text-xs text-gray-500">
               {(watch("overview") ?? "").length}/5000 characters. Displayed at the top of the public course page.
