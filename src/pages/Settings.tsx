@@ -14,11 +14,11 @@ export default function Settings() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
-    getSettings().then((settings: any) => {
-      const tp = settings.find((s: any) => s.setting_key === "training_plan_expiry_days")?.setting_value;
-      const b = settings.find((s: any) => s.setting_key === "brochure_expiry_days")?.setting_value;
-      if (tp) setTrainingExpiry(Number(tp));
-      if (b) setBrochureExpiry(Number(b));
+    getSettings().then((settings: Record<string, any>) => {
+      const tp = settings["training_plan_expiry_days"];
+      const b  = settings["brochure_expiry_days"];
+      if (tp !== undefined) setTrainingExpiry(Number(tp));
+      if (b  !== undefined) setBrochureExpiry(Number(b));
     }).catch(() => {
       setMessage({ type: "error", text: "Failed to load settings." });
     }).finally(() => setLoading(false));
