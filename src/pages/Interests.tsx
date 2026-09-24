@@ -358,26 +358,29 @@ export default function Interests() {
                           <option value="rejected">Rejected</option>
                         </select>
 
-                          <div className="inline-block flex-col align-top">
-                            <button
-                              onClick={() =>
-                                handleConvertToEnrollment(interest.id)
-                              }
-                              disabled={converting === interest.id || interest.status === "enrolled"}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {converting === interest.id
-                                ? "Converting..."
-                                : interest.status === "enrolled"
+                        <div className="inline-block flex-col align-top">
+                          <button
+                            onClick={() =>
+                              handleConvertToEnrollment(interest.id)
+                            }
+                            disabled={
+                              converting === interest.id ||
+                              interest.status === "enrolled"
+                            }
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {converting === interest.id
+                              ? "Converting..."
+                              : interest.status === "enrolled"
                                 ? "Converted"
                                 : "Convert to Enrollment"}
-                            </button>
-                            {convertError[interest.id] && (
-                              <div className="text-red-500 text-xs mt-1 block">
-                                {convertError[interest.id]}
-                              </div>
-                            )}
-                          </div>
+                          </button>
+                          {convertError[interest.id] && (
+                            <div className="text-red-500 text-xs mt-1 block">
+                              {convertError[interest.id]}
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -410,7 +413,9 @@ export default function Interests() {
         message="Are you sure you want to convert this enquiry into an enrollment? This will create an active training record and update the enquiry status."
         confirmText="Convert"
         cancelText="Cancel"
-        onConfirm={() => confirmConvertId && executeConversion(confirmConvertId)}
+        onConfirm={() =>
+          confirmConvertId && executeConversion(confirmConvertId)
+        }
         onCancel={() => setConfirmConvertId(null)}
         isDestructive={false}
       />

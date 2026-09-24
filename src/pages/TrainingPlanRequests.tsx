@@ -42,13 +42,23 @@ export default function TrainingPlanRequests() {
         return;
       }
 
-      const headers = ["Date", "Name", "Email", "Mobile", "Company", "Designation", "Status"];
+      const headers = [
+        "Date",
+        "Name",
+        "Email",
+        "Mobile",
+        "Company",
+        "Designation",
+        "Status",
+      ];
       const csvContent = [
         headers.join(","),
         ...data.data.map((r: any) => {
           const date = new Date(r.created_at).toLocaleDateString();
-          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
-          const status = new Date(r.expires_at) < new Date() ? "Expired" : "Valid";
+          const escapeCSV = (str: string) =>
+            `"${(str || "").replace(/"/g, '""')}"`;
+          const status =
+            new Date(r.expires_at) < new Date() ? "Expired" : "Valid";
 
           return [
             date,

@@ -56,7 +56,8 @@ export default function Enquiries() {
         headers.join(","),
         ...res.data.map((enq: any) => {
           const date = new Date(enq.created_at).toLocaleDateString();
-          const escapeCSV = (str: string) => `"${(str || "").replace(/"/g, '""')}"`;
+          const escapeCSV = (str: string) =>
+            `"${(str || "").replace(/"/g, '""')}"`;
 
           return [
             date,
@@ -127,7 +128,7 @@ export default function Enquiries() {
             </button>
           </form>
         </div>
-        
+
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

@@ -28,7 +28,9 @@ export default function ConfirmationModal({
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            {isDestructive && <AlertTriangle className="w-5 h-5 text-red-500" />}
+            {isDestructive && (
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+            )}
             {title}
           </h3>
           <button
@@ -38,7 +40,7 @@ export default function ConfirmationModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="px-6 py-6 text-gray-600 text-sm">
           {message}
           {isDestructive && (
@@ -47,7 +49,7 @@ export default function ConfirmationModal({
             </p>
           )}
         </div>
-        
+
         <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
           <button
             onClick={onCancel}

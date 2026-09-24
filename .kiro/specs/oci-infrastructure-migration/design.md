@@ -362,13 +362,13 @@ After this update, `dot-portal-api`'s `loadAppRegistryFromDb()` will provision t
 
 **`dot-portal-api` (Vercel)**:
 
-| Environment | Variable                     | Value                                                      |
-| ----------- | ---------------------------- | ---------------------------------------------------------- |
-| Production  | `DOT_COS_BASE_DOMAIN`        | `govnix.net`                                               |
+| Environment | Variable                | Value                                                      |
+| ----------- | ----------------------- | ---------------------------------------------------------- |
+| Production  | `DOT_COS_BASE_DOMAIN`   | `govnix.net`                                               |
 | Production  | `FLOORIX_BASE_DOMAIN`   | `floorix.net`                                              |
-| Production  | `DOT_COS_CORS_ENDPOINT`      | `https://api.govnix.net/api/v1/internal/cors-origins`      |
+| Production  | `DOT_COS_CORS_ENDPOINT` | `https://api.govnix.net/api/v1/internal/cors-origins`      |
 | Production  | `FLOORIX_CORS_ENDPOINT` | `https://api.floorix.net/api/v1/internal/cors-origins`     |
-| Dev         | `DOT_COS_CORS_ENDPOINT`      | `https://api-dev.govnix.net/api/v1/internal/cors-origins`  |
+| Dev         | `DOT_COS_CORS_ENDPOINT` | `https://api-dev.govnix.net/api/v1/internal/cors-origins`  |
 | Dev         | `FLOORIX_CORS_ENDPOINT` | `https://api-dev.floorix.net/api/v1/internal/cors-origins` |
 
 **`cos-api-gateway` `.env.prod` / `.env.dev`** (on OCI instance):

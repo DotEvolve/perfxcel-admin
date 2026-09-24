@@ -72,7 +72,9 @@ function TaxonomyCard({
       onRefresh();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setDeleteError(axiosErr.response?.data?.message ?? "Failed to delete item");
+      setDeleteError(
+        axiosErr.response?.data?.message ?? "Failed to delete item",
+      );
       setDeleteLoading(false);
     }
   };
@@ -82,7 +84,7 @@ function TaxonomyCard({
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
         <h4 className="font-medium text-gray-900">{title}</h4>
       </div>
-      
+
       <ul className="divide-y divide-gray-200 flex-1 overflow-y-auto min-h-[200px] max-h-96">
         {items.length === 0 ? (
           <li className="px-4 py-3 text-sm text-gray-500 text-center">Empty</li>
@@ -111,7 +113,7 @@ function TaxonomyCard({
           ))
         )}
       </ul>
-      
+
       <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
         <form onSubmit={handleAdd} className="flex gap-2">
           <input
@@ -130,9 +132,7 @@ function TaxonomyCard({
             <Plus className="w-4 h-4" />
           </button>
         </form>
-        {addError && (
-          <p className="mt-1.5 text-xs text-red-600">{addError}</p>
-        )}
+        {addError && <p className="mt-1.5 text-xs text-red-600">{addError}</p>}
       </div>
 
       <InlineEditModal
@@ -151,13 +151,18 @@ function TaxonomyCard({
           <>
             Are you sure you want to delete <strong>{deleteItem?.name}</strong>?
             {deleteError && (
-              <span className="block mt-2 text-red-600 text-xs">{deleteError}</span>
+              <span className="block mt-2 text-red-600 text-xs">
+                {deleteError}
+              </span>
             )}
           </>
         }
         confirmText={deleteLoading ? "Deleting..." : "Delete"}
         onConfirm={handleDelete}
-        onCancel={() => { setDeleteItem(null); setDeleteError(null); }}
+        onCancel={() => {
+          setDeleteItem(null);
+          setDeleteError(null);
+        }}
         isDestructive={true}
       />
     </div>

@@ -162,17 +162,27 @@ export const getTaxonomies = async (): Promise<any> => {
   return response.data.data;
 };
 
-export const createTaxonomy = async (type: string, name: string): Promise<any> => {
+export const createTaxonomy = async (
+  type: string,
+  name: string,
+): Promise<any> => {
   const response = await api.post(`/taxonomies/${type}`, { name });
   return response.data;
 };
 
-export const updateTaxonomy = async (type: string, id: string, name: string): Promise<any> => {
+export const updateTaxonomy = async (
+  type: string,
+  id: string,
+  name: string,
+): Promise<any> => {
   const response = await api.put(`/taxonomies/${type}/${id}`, { name });
   return response.data;
 };
 
-export const deleteTaxonomy = async (type: string, id: string): Promise<any> => {
+export const deleteTaxonomy = async (
+  type: string,
+  id: string,
+): Promise<any> => {
   const response = await api.delete(`/taxonomies/${type}/${id}`);
   return response.data;
 };

@@ -60,7 +60,9 @@ function Layout() {
   };
 
   const handleLogout = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       const u = session.user;
       const tenantId = u.app_metadata?.activeTenantId;
