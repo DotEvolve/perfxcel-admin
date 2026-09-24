@@ -146,7 +146,9 @@ export const updateSettings = async (payload: {
 
 // Convenience wrapper — updates a single setting key by building the batch payload.
 export const updateSetting = async (key: string, value: number) => {
-  return updateSettings({ [key]: value } as Parameters<typeof updateSettings>[0]);
+  return updateSettings({ [key]: value } as Parameters<
+    typeof updateSettings
+  >[0]);
 };
 
 export const getInterests = async (

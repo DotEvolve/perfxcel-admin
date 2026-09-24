@@ -14,8 +14,10 @@ function hasPerfxcelAccess(session: Session): boolean {
     role?: string;
   };
   if (meta?.role === "super-admin") return true;
-  return Array.isArray(meta?.activeAppAccess) &&
-    meta.activeAppAccess.includes("perfxcel");
+  return (
+    Array.isArray(meta?.activeAppAccess) &&
+    meta.activeAppAccess.includes("perfxcel")
+  );
 }
 
 export function Login() {
@@ -43,7 +45,9 @@ export function Login() {
       // assigned to an app. If 'perfxcel' is not in that list, block sign-in.
       if (!hasPerfxcelAccess(data.session)) {
         await supabase.auth.signOut();
-        setError("Access restricted. You are not assigned to the PerfXcel app.");
+        setError(
+          "Access restricted. You are not assigned to the PerfXcel app.",
+        );
         setLoading(false);
         return;
       }

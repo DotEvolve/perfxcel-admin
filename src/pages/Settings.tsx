@@ -11,17 +11,23 @@ export default function Settings() {
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
-    getSettings().then((settings: Record<string, any>) => {
-      const tp = settings["training_plan_expiry_days"];
-      const b  = settings["brochure_expiry_days"];
-      if (tp !== undefined) setTrainingExpiry(Number(tp));
-      if (b  !== undefined) setBrochureExpiry(Number(b));
-    }).catch(() => {
-      setMessage({ type: "error", text: "Failed to load settings." });
-    }).finally(() => setLoading(false));
+    getSettings()
+      .then((settings: Record<string, any>) => {
+        const tp = settings["training_plan_expiry_days"];
+        const b = settings["brochure_expiry_days"];
+        if (tp !== undefined) setTrainingExpiry(Number(tp));
+        if (b !== undefined) setBrochureExpiry(Number(b));
+      })
+      .catch(() => {
+        setMessage({ type: "error", text: "Failed to load settings." });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -29,13 +35,21 @@ export default function Settings() {
     setSaving(true);
     setMessage(null);
     try {
-      const payload: { training_plan_expiry_days?: number; brochure_expiry_days?: number } = {};
-      if (trainingExpiry !== "") payload.training_plan_expiry_days = Number(trainingExpiry);
-      if (brochureExpiry !== "") payload.brochure_expiry_days = Number(brochureExpiry);
+      const payload: {
+        training_plan_expiry_days?: number;
+        brochure_expiry_days?: number;
+      } = {};
+      if (trainingExpiry !== "")
+        payload.training_plan_expiry_days = Number(trainingExpiry);
+      if (brochureExpiry !== "")
+        payload.brochure_expiry_days = Number(brochureExpiry);
       await updateSettings(payload);
       setMessage({ type: "success", text: "Settings saved successfully." });
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Failed to save settings." });
+      setMessage({
+        type: "error",
+        text: err.message || "Failed to save settings.",
+      });
     } finally {
       setSaving(false);
     }
@@ -46,14 +60,21 @@ export default function Settings() {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <h2 className="text-2xl font-semibold mb-6">Settings</h2>
-      
+
       {message && (
         <div className="mb-6">
-          <Alert variant={message.type === 'error' ? 'error' : 'success'} title={message.type === 'error' ? 'Error' : 'Success'} message={message.text} />
+          <Alert
+            variant={message.type === "error" ? "error" : "success"}
+            title={message.type === "error" ? "Error" : "Success"}
+            message={message.text}
+          />
         </div>
       )}
 
-      <form onSubmit={handleSave} className="bg-white shadow rounded-lg p-6 space-y-6">
+      <form
+        onSubmit={handleSave}
+        className="bg-white shadow rounded-lg p-6 space-y-6"
+      >
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Training Plan Link Expiry (Days)
@@ -64,10 +85,14 @@ export default function Settings() {
             max="3650"
             required
             value={trainingExpiry}
-            onChange={(e) => setTrainingExpiry(e.target.value ? Number(e.target.value) : "")}
+            onChange={(e) =>
+              setTrainingExpiry(e.target.value ? Number(e.target.value) : "")
+            }
             className="w-full border border-gray-300 rounded-md p-2"
           />
-          <p className="mt-1 text-xs text-gray-500">Days until a downloaded training plan link expires.</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Days until a downloaded training plan link expires.
+          </p>
         </div>
 
         <div>
@@ -80,10 +105,14 @@ export default function Settings() {
             max="3650"
             required
             value={brochureExpiry}
-            onChange={(e) => setBrochureExpiry(e.target.value ? Number(e.target.value) : "")}
+            onChange={(e) =>
+              setBrochureExpiry(e.target.value ? Number(e.target.value) : "")
+            }
             className="w-full border border-gray-300 rounded-md p-2"
           />
-          <p className="mt-1 text-xs text-gray-500">Days until a course brochure download link expires.</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Days until a course brochure download link expires.
+          </p>
         </div>
 
         <div className="pt-4 border-t">
@@ -99,8 +128,11 @@ export default function Settings() {
 
       <div className="mt-8 bg-white shadow rounded-lg p-6 space-y-6">
         <h3 className="text-lg font-medium">Training Plan Document</h3>
-        <p className="text-sm text-gray-500">Upload a new master training plan document (PDF) to replace the existing one.</p>
-        
+        <p className="text-sm text-gray-500">
+          Upload a new master training plan document (PDF) to replace the
+          existing one.
+        </p>
+
         <div className="flex items-center gap-4">
           <input
             type="file"
@@ -113,11 +145,19 @@ export default function Settings() {
               setUploading(true);
               setMessage(null);
               try {
-                const { error } = await supabase.storage.from("assets").upload("training_plan.pdf", file, { upsert: true });
+                const { error } = await supabase.storage
+                  .from("assets")
+                  .upload("training_plan.pdf", file, { upsert: true });
                 if (error) throw error;
-                setMessage({ type: "success", text: "Training plan uploaded successfully!" });
+                setMessage({
+                  type: "success",
+                  text: "Training plan uploaded successfully!",
+                });
               } catch (err: any) {
-                setMessage({ type: "error", text: err.message || "Failed to upload training plan." });
+                setMessage({
+                  type: "error",
+                  text: err.message || "Failed to upload training plan.",
+                });
               } finally {
                 setUploading(false);
                 if (fileInputRef.current) fileInputRef.current.value = "";
@@ -136,13 +176,18 @@ export default function Settings() {
             onClick={async () => {
               setDownloading(true);
               try {
-                const { data, error } = await supabase.storage.from("assets").createSignedUrl("training_plan.pdf", 60);
+                const { data, error } = await supabase.storage
+                  .from("assets")
+                  .createSignedUrl("training_plan.pdf", 60);
                 if (error) throw error;
                 if (data?.signedUrl) {
                   window.open(data.signedUrl, "_blank");
                 }
               } catch (err: any) {
-                setMessage({ type: "error", text: err.message || "Failed to download." });
+                setMessage({
+                  type: "error",
+                  text: err.message || "Failed to download.",
+                });
               } finally {
                 setDownloading(false);
               }

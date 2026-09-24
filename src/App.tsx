@@ -39,8 +39,10 @@ function hasPerfxcelAccess(session: Session): boolean {
   // Super-admins always have access
   if (meta?.role === "super-admin") return true;
   // Regular users must have 'perfxcel' in their active app access list
-  return Array.isArray(meta?.activeAppAccess) &&
-    meta.activeAppAccess.includes("perfxcel");
+  return (
+    Array.isArray(meta?.activeAppAccess) &&
+    meta.activeAppAccess.includes("perfxcel")
+  );
 }
 
 function AuthGuard({

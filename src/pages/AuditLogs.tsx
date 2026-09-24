@@ -166,8 +166,12 @@ export default function AuditLogs() {
                       {log.metadata && Object.keys(log.metadata).length > 0 ? (
                         <details className="group">
                           <summary className="cursor-pointer text-indigo-600 hover:text-indigo-800 font-medium list-none flex items-center gap-1">
-                            <span className="group-open:hidden">View Details</span>
-                            <span className="hidden group-open:inline">Hide Details</span>
+                            <span className="group-open:hidden">
+                              View Details
+                            </span>
+                            <span className="hidden group-open:inline">
+                              Hide Details
+                            </span>
                           </summary>
                           <pre className="mt-2 p-2 bg-gray-50 rounded border text-xs overflow-x-auto max-w-sm whitespace-pre-wrap">
                             {JSON.stringify(log.metadata, null, 2)}
