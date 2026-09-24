@@ -134,9 +134,19 @@ export const getSettings = async () => {
   return response.data.data;
 };
 
-export const updateSetting = async (key: string, value: any) => {
-  const response = await api.patch("/settings", { key, value });
-  return response.data.data;
+// Sends a batch update: { training_plan_expiry_days?: number, brochure_expiry_days?: number }
+// The backend controller accepts both keys together via PUT /settings.
+export const updateSettings = async (payload: {
+  training_plan_expiry_days?: number;
+  brochure_expiry_days?: number;
+}) => {
+  const response = await api.put("/settings", payload);
+  return response.data;
+};
+
+// Convenience wrapper — updates a single setting key by building the batch payload.
+export const updateSetting = async (key: string, value: number) => {
+  return updateSettings({ [key]: value } as Parameters<typeof updateSettings>[0]);
 };
 
 export const getInterests = async (

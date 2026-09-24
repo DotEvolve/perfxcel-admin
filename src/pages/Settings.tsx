@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { getSettings, updateSetting } from "../lib/api";
+import { getSettings, updateSettings } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import { Alert } from "@dotevolve/ui-kit";
 
@@ -29,8 +29,10 @@ export default function Settings() {
     setSaving(true);
     setMessage(null);
     try {
-      if (trainingExpiry) await updateSetting("training_plan_expiry_days", String(trainingExpiry));
-      if (brochureExpiry) await updateSetting("brochure_expiry_days", String(brochureExpiry));
+      const payload: { training_plan_expiry_days?: number; brochure_expiry_days?: number } = {};
+      if (trainingExpiry !== "") payload.training_plan_expiry_days = Number(trainingExpiry);
+      if (brochureExpiry !== "") payload.brochure_expiry_days = Number(brochureExpiry);
+      await updateSettings(payload);
       setMessage({ type: "success", text: "Settings saved successfully." });
     } catch (err: any) {
       setMessage({ type: "error", text: err.message || "Failed to save settings." });
