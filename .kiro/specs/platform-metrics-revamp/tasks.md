@@ -1,0 +1,137 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Fault Condition** - Real-Time Heroku Infrastructure Data
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bug exists
+  - **Scoped PBT Approach**: Scope the property to concrete failing cases - requests to `/infra` endpoint that return null, static data, or non-Heroku data
+  - Test that `/infra` endpoint returns real-time Heroku data (not null, not static, fetched from Heroku Platform API)
+  - Test that response contains dyno metrics, app details, and formation information
+  - Test that response matches `{ data: InfraDetail[] }` format with fields: component, provider, region, type, typeColor
+  - Test that data changes when Heroku state changes (not hardcoded/static)
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bug exists)
+  - Document counterexamples found (e.g., "endpoint returns 404", "endpoint returns null", "endpoint returns static data that never changes")
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Service Health Check Functionality
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for service health checks (API Gateway, Workflow Service, Database, Document Storage)
+  - Observe that health checks measure response times and display status indicators correctly
+  - Observe that "Refresh Status" button triggers health checks
+  - Observe that overall status banner displays based on service health
+  - Observe that 30-second auto-refresh works correctly
+  - Write property-based tests capturing observed behavior patterns from Preservation Requirements
+  - Property-based testing generates many test cases for stronger guarantees
+  - Test that all non-`/infra` functionality produces the same behavior across many scenarios
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
+
+- [x] 3. Implement /infra endpoint with Heroku Platform API integration
+
+  - [x] 3.1 Set up Heroku API client and environment configuration
+    - Install axios or verify existing HTTP client in govnix-api-gateway
+    - Add `HEROKU_API_TOKEN` to `.env.example` with documentation
+    - Configure environment variable in production deployment
+    - Document that token should be Heroku OAuth token with read access to apps
+    - _Bug_Condition: isBugCondition(request) where request.endpoint == "/infra" AND response.data is null/static/not from Heroku_
+    - _Expected_Behavior: Returns real-time Heroku data with dyno metrics, app details, formations_
+    - _Preservation: Service health checks, response times, auto-refresh, manual refresh, status banner remain unchanged_
+    - _Requirements: 2.1, 2.2, 3.6_
+
+  - [x] 3.2 Implement /infra endpoint handler in API Gateway
+    - Create new GET endpoint at `/infra` in govnix-api-gateway/api/index.js
+    - Add authentication middleware (requireAuth or public - needs clarification)
+    - Implement request handler that will fetch Heroku data
+    - Set up response format: `{ data: InfraDetail[] }`
+    - _Bug_Condition: isBugCondition(request) where request.endpoint == "/infra"_
+    - _Expected_Behavior: Endpoint exists and returns properly formatted response_
+    - _Preservation: All other API endpoints continue to work unchanged_
+    - _Requirements: 2.1, 2.2, 3.1, 3.7_
+
+  - [x] 3.3 Integrate with Heroku Platform API to fetch apps
+    - Make authenticated request to `GET https://api.heroku.com/apps`
+    - Use headers: `Authorization: Bearer ${HEROKU_API_TOKEN}`, `Accept: application/vnd.heroku+json; version=3`
+    - Parse response to get list of all Heroku apps
+    - Handle authentication failures gracefully
+    - _Bug_Condition: isBugCondition(request) where NOT fetchedFromHeroku(response.data)_
+    - _Expected_Behavior: Successfully fetches app list from Heroku Platform API_
+    - _Preservation: No impact on existing functionality_
+    - _Requirements: 2.1, 2.2, 2.5_
+
+  - [x] 3.4 Fetch dyno and formation details for each app
+    - For each app, fetch dyno information: `GET https://api.heroku.com/apps/{app-id}/dynos`
+    - For each app, fetch formation details: `GET https://api.heroku.com/apps/{app-id}/formation`
+    - Extract dyno types (web, worker), quantities, sizes, and status
+    - Extract CPU usage, memory consumption, and resource metrics
+    - _Bug_Condition: isBugCondition(request) where NOT containsRealTimeDynoMetrics(response.data)_
+    - _Expected_Behavior: Returns comprehensive dyno metrics and formation data_
+    - _Preservation: No impact on existing functionality_
+    - _Requirements: 2.2, 2.3, 2.4, 2.7_
+
+  - [x] 3.5 Transform Heroku API response to InfraDetail format
+    - Map Heroku app data to InfraDetail interface
+    - Set `component`: App name (e.g., "cos-api-gateway")
+    - Set `provider`: "Heroku"
+    - Set `region`: App region from Heroku API (e.g., "us")
+    - Set `type`: Dyno type (e.g., "Web", "Worker")
+    - Set `typeColor`: Map dyno types to color scheme (web → indigo, worker → emerald)
+    - Ensure response format matches `{ data: InfraDetail[] }`
+    - _Bug_Condition: isBugCondition(request) where response format doesn't match expected InfraDetail[]_
+    - _Expected_Behavior: Data is correctly transformed to match frontend interface_
+    - _Preservation: No impact on existing functionality_
+    - _Requirements: 2.1, 2.2, 2.7_
+
+  - [x] 3.6 Implement error handling and caching
+    - Handle Heroku API authentication failures with graceful error response
+    - Handle rate limiting (Heroku API has rate limits)
+    - Return meaningful error messages if Heroku API is unavailable
+    - Log errors for debugging purposes
+    - Implement simple caching (30-60 seconds) to reduce Heroku API calls
+    - Return cached data if available and not expired
+    - _Bug_Condition: isBugCondition(request) where error handling is missing_
+    - _Expected_Behavior: Robust error handling and efficient caching_
+    - _Preservation: No impact on existing functionality_
+    - _Requirements: 2.1, 2.6_
+
+  - [x] 3.7 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Real-Time Heroku Infrastructure Data
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - Verify `/infra` endpoint returns real-time Heroku data
+    - Verify response contains dyno metrics, app details, and formations
+    - Verify data format matches `{ data: InfraDetail[] }`
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
+
+  - [x] 3.8 Verify preservation tests still pass
+    - **Property 2: Preservation** - Service Health Check Functionality
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - Verify service health checks continue to work correctly
+    - Verify response times, status indicators, and timestamps display correctly
+    - Verify "Refresh Status" button triggers health checks
+    - Verify overall status banner displays correctly
+    - Verify 30-second auto-refresh works correctly
+    - Verify authentication mechanism remains unchanged
+    - Verify page layout and UI remain unchanged
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Confirm all tests still pass after fix (no regressions)
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run all exploration tests and verify they pass (bug is fixed)
+  - Run all preservation tests and verify they pass (no regressions)
+  - Test full integration: Frontend loads PlatformMetrics page → calls `/infra` → displays real-time Heroku data
+  - Test with multiple Heroku apps (cos-api-gateway, cos-workflow, cos-rules)
+  - Test error scenarios (invalid token, Heroku API unavailable)
+  - Verify caching works correctly (reduces API calls)
+  - Ensure all tests pass, ask the user if questions arise
