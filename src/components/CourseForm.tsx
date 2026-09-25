@@ -354,7 +354,10 @@ export default function CourseForm() {
           const { data } = supabase.storage
             .from("course-images")
             .getPublicUrl(filename);
-          updatePayload.image_url = data.publicUrl;
+            
+          const frontendUrl = import.meta.env.VITE_PERFXCEL_FRONTEND_URL || (import.meta.env.MODE === "production" ? "https://perfxcel.com" : "https://dev.perfxcel.com");
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://db-dev.dotevolve.net";
+          updatePayload.image_url = data.publicUrl.replace(supabaseUrl, frontendUrl);
         }
 
         if (brochureFile && savedCourse.short_code) {
