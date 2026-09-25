@@ -160,9 +160,18 @@ export default function Settings() {
                   text: "Training plan uploaded successfully!",
                 });
               } catch (err: any) {
+                let errorMsg = err.message || "Failed to upload training plan.";
+                if (errorMsg === "Network Error") {
+                  errorMsg = "Network Error: The file might be too large for the server configuration (e.g. Nginx or Cloudflare limit). Please try a smaller file (under 1MB) or ask your admin to increase the limit.";
+                  setSizeErrorModal({
+                    isOpen: true,
+                    message: errorMsg
+                  });
+                  return;
+                }
                 setMessage({
                   type: "error",
-                  text: err.message || "Failed to upload training plan.",
+                  text: errorMsg,
                 });
               } finally {
                 setUploading(false);

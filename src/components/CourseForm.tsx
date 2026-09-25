@@ -368,7 +368,16 @@ export default function CourseForm() {
       }
       navigate("/courses");
     } catch (err: any) {
-      alert("Failed to save course: " + (err.message || ""));
+      let errorMsg = err.message || "";
+      if (errorMsg === "Network Error") {
+        errorMsg = "Network Error: The uploaded file (image or brochure) might be too large for the server configuration (e.g. Nginx limit). Please try a smaller file or ask your admin to increase the limit.";
+        setSizeErrorModal({
+          isOpen: true,
+          message: errorMsg
+        });
+        return;
+      }
+      alert("Failed to save course: " + errorMsg);
     }
   };
 
