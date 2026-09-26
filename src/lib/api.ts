@@ -223,7 +223,18 @@ export const hardDeleteInterest = async (id: string) => {
 export const getCourses = async (
   params?: Record<string, any>,
 ): Promise<PaginatedResponse<Course>> => {
-  const response = await api.get("/courses", { params });
+  const searchParams = new URLSearchParams();
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (Array.isArray(value)) {
+        value.forEach((val) => searchParams.append(key, val));
+      } else if (value !== undefined && value !== null && value !== "") {
+        searchParams.append(key, String(value));
+      }
+    }
+  }
+
+  const response = await api.get(`/courses?${searchParams.toString()}`);
   return response.data;
 };
 
