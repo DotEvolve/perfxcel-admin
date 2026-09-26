@@ -9,6 +9,7 @@ import {
 } from "../lib/api";
 import type { Course, TaxonomyItem, PaginatedResponse } from "../lib/api";
 import Pagination from "../components/Pagination";
+import FilterBar from "../components/FilterBar";
 
 export function CoursesList() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function CoursesList() {
   const limit = 20;
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("created_at:desc");
+  const [publishStatus, setPublishStatus] = useState("all");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [cityIds, setCityIds] = useState<string[]>([]);
   const [associationIds, setAssociationIds] = useState<string[]>([]);
@@ -57,6 +59,15 @@ export function CoursesList() {
     if (associationIds.length > 0) params.association_id = associationIds;
     if (deliveryModeIds.length > 0) params.delivery_mode_id = deliveryModeIds;
 
+    if (publishStatus === "published") {
+      params.is_published = "true";
+    } else if (publishStatus === "draft") {
+      params.is_published = "false";
+    } else if (publishStatus === "public") {
+      params.is_published = "true";
+      params.is_public = "true";
+    }
+
     getCourses(params)
       .then((res: PaginatedResponse<Course>) => {
         setCourses(res.data);
@@ -77,6 +88,7 @@ export function CoursesList() {
     cityIds,
     associationIds,
     deliveryModeIds,
+    publishStatus,
   ]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,27 +258,41 @@ export function CoursesList() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4 space-x-4">
-          <input
-            type="text"
-            placeholder="Search courses..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
+        <div className="mb-4">
+          <FilterBar
+            search={search}
+            onSearchChange={(v) => {
+              setSearch(v);
               setPage(1);
             }}
-            className="w-full max-w-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            statusOptions={[
+              { label: "Draft", value: "draft" },
+              { label: "Published", value: "published" },
+              { label: "Public (Homepage)", value: "public" },
+            ]}
+            status={publishStatus}
+            onStatusChange={(v) => {
+              setPublishStatus(v);
+              setPage(1);
+            }}
+            onClear={() => {
+              setSearch("");
+              setPublishStatus("all");
+              setSort("created_at:desc");
+              setPage(1);
+            }}
           >
-            <option value="created_at:desc">Newest First</option>
-            <option value="created_at:asc">Oldest First</option>
-            <option value="title:asc">Title (A-Z)</option>
-            <option value="title:desc">Title (Z-A)</option>
-          </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="border border-gray-300 rounded-md text-sm py-2 px-3 bg-white focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="created_at:desc">Newest First</option>
+              <option value="created_at:asc">Oldest First</option>
+              <option value="title:asc">Title (A-Z)</option>
+              <option value="title:desc">Title (Z-A)</option>
+            </select>
+          </FilterBar>
         </div>
 
         <div className="bg-white shadow overflow-hidden sm:rounded-md flex-1 flex flex-col">
