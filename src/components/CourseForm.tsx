@@ -166,6 +166,49 @@ function SortableDay({
   );
 }
 
+const TaxonomyCheckboxGroup = ({
+  label,
+  items,
+  name,
+  watch,
+  setValue
+}: {
+  label: string;
+  items: TaxonomyItem[];
+  name: "category_ids" | "city_ids" | "association_ids" | "delivery_mode_ids";
+  watch: any;
+  setValue: any;
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label}
+    </label>
+    <div className="w-full h-48 overflow-y-auto border rounded p-2 bg-white space-y-1">
+      {items.map((c) => {
+        const currentIds = watch(name) || [];
+        const isChecked = currentIds.includes(c.id);
+        return (
+          <label key={c.id} className="flex items-center space-x-2 text-sm cursor-pointer p-1 hover:bg-gray-50 rounded">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setValue(name, [...currentIds, c.id], { shouldDirty: true });
+                } else {
+                  setValue(name, currentIds.filter((id: string) => id !== c.id), { shouldDirty: true });
+                }
+              }}
+              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            />
+            <span>{c.name}</span>
+          </label>
+        );
+      })}
+    </div>
+  </div>
+);
+
 export default function CourseForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -597,95 +640,35 @@ export default function CourseForm() {
 
         <section className="space-y-4">
           <h4 className="font-medium text-lg border-b pb-2">Taxonomies</h4>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categories
-              </label>
-              <select
-                multiple
-                value={watch("category_ids")}
-                onChange={(e) =>
-                  setValue(
-                    "category_ids",
-                    Array.from(e.target.selectedOptions).map((o) => o.value),
-                  )
-                }
-                className="w-full h-32 border rounded p-2"
-              >
-                {taxonomies.categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cities
-              </label>
-              <select
-                multiple
-                value={watch("city_ids")}
-                onChange={(e) =>
-                  setValue(
-                    "city_ids",
-                    Array.from(e.target.selectedOptions).map((o) => o.value),
-                  )
-                }
-                className="w-full h-32 border rounded p-2"
-              >
-                {taxonomies.cities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Associations
-              </label>
-              <select
-                multiple
-                value={watch("association_ids")}
-                onChange={(e) =>
-                  setValue(
-                    "association_ids",
-                    Array.from(e.target.selectedOptions).map((o) => o.value),
-                  )
-                }
-                className="w-full h-32 border rounded p-2"
-              >
-                {taxonomies.associations.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Delivery Modes
-              </label>
-              <select
-                multiple
-                value={watch("delivery_mode_ids")}
-                onChange={(e) =>
-                  setValue(
-                    "delivery_mode_ids",
-                    Array.from(e.target.selectedOptions).map((o) => o.value),
-                  )
-                }
-                className="w-full h-32 border rounded p-2"
-              >
-                {taxonomies.delivery_modes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <TaxonomyCheckboxGroup
+              label="Categories"
+              items={taxonomies.categories}
+              name="category_ids"
+              watch={watch}
+              setValue={setValue}
+            />
+            <TaxonomyCheckboxGroup
+              label="Cities"
+              items={taxonomies.cities}
+              name="city_ids"
+              watch={watch}
+              setValue={setValue}
+            />
+            <TaxonomyCheckboxGroup
+              label="Associations"
+              items={taxonomies.associations}
+              name="association_ids"
+              watch={watch}
+              setValue={setValue}
+            />
+            <TaxonomyCheckboxGroup
+              label="Delivery Modes"
+              items={taxonomies.delivery_modes}
+              name="delivery_mode_ids"
+              watch={watch}
+              setValue={setValue}
+            />
           </div>
         </section>
 
