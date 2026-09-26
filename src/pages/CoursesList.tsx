@@ -22,7 +22,7 @@ export function CoursesList() {
   const limit = 20;
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("created_at:desc");
-  const [publishStatus, setPublishStatus] = useState("all");
+  const [publishStatuses, setPublishStatuses] = useState<string[]>([]);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [cityIds, setCityIds] = useState<string[]>([]);
   const [associationIds, setAssociationIds] = useState<string[]>([]);
@@ -59,13 +59,8 @@ export function CoursesList() {
     if (associationIds.length > 0) params.association_id = associationIds;
     if (deliveryModeIds.length > 0) params.delivery_mode_id = deliveryModeIds;
 
-    if (publishStatus === "published") {
-      params.is_published = "true";
-    } else if (publishStatus === "draft") {
-      params.is_published = "false";
-    } else if (publishStatus === "public") {
-      params.is_published = "true";
-      params.is_public = "true";
+    if (publishStatuses.length > 0) {
+      params.publish_statuses = publishStatuses;
     }
 
     getCourses(params)
@@ -88,7 +83,7 @@ export function CoursesList() {
     cityIds,
     associationIds,
     deliveryModeIds,
-    publishStatus,
+    publishStatuses,
   ]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,14 +142,57 @@ export function CoursesList() {
     setPage(1); // Reset page on filter change
   };
 
+  const handleClearFilters = () => {
+    setSearch("");
+    setPublishStatuses([]);
+    setCategoryIds([]);
+    setCityIds([]);
+    setAssociationIds([]);
+    setDeliveryModeIds([]);
+    setSort("created_at:desc");
+    setPage(1);
+  };
+
+  const hasAnyFilter = search || publishStatuses.length > 0 || categoryIds.length > 0 || cityIds.length > 0 || associationIds.length > 0 || deliveryModeIds.length > 0;
+
   return (
     <div className="flex h-full gap-6">
       {/* Sidebar Filters */}
       <div className="w-64 flex-shrink-0 bg-white rounded-lg shadow p-4 overflow-y-auto">
-        <h4 className="font-medium text-gray-900 mb-4">Filters</h4>
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="font-medium text-gray-900">Filters</h4>
+          {hasAnyFilter && (
+            <button
+              onClick={handleClearFilters}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
 
         {taxonomies && (
           <div className="space-y-6">
+            <div>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">Status</h5>
+              <div className="space-y-2">
+                {[
+                  { id: "draft", name: "Draft" },
+                  { id: "published", name: "Published" },
+                  { id: "public", name: "Public (Homepage)" },
+                ].map((s) => (
+                  <label key={s.id} className="flex items-center text-sm">
+                    <input
+                      type="checkbox"
+                      className="mr-2 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={publishStatuses.includes(s.id)}
+                      onChange={() => handleFilterToggle(setPublishStatuses, s.id)}
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div>
               <h5 className="text-sm font-medium text-gray-700 mb-2">
                 Categories
@@ -265,22 +303,7 @@ export function CoursesList() {
               setSearch(v);
               setPage(1);
             }}
-            statusOptions={[
-              { label: "Draft", value: "draft" },
-              { label: "Published", value: "published" },
-              { label: "Public (Homepage)", value: "public" },
-            ]}
-            status={publishStatus}
-            onStatusChange={(v) => {
-              setPublishStatus(v);
-              setPage(1);
-            }}
-            onClear={() => {
-              setSearch("");
-              setPublishStatus("all");
-              setSort("created_at:desc");
-              setPage(1);
-            }}
+            onClear={handleClearFilters}
           >
             <select
               value={sort}
