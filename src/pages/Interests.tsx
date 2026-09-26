@@ -481,19 +481,31 @@ export default function Interests() {
 
       <FilterBar
         search={searchQuery}
-        onSearchChange={(v) => { setSearchQuery(v); setPage(1); }}
+        onSearchChange={(v) => {
+          setSearchQuery(v);
+          setPage(1);
+        }}
         statusOptions={[
           { label: "New", value: "new" },
           { label: "Contacted", value: "contacted" },
           { label: "Enrolled", value: "enrolled" },
-          { label: "Rejected", value: "rejected" }
+          { label: "Rejected", value: "rejected" },
         ]}
         status={statusFilter}
-        onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+        onStatusChange={(v) => {
+          setStatusFilter(v);
+          setPage(1);
+        }}
         dateFrom={dateFrom}
-        onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+        onDateFromChange={(v) => {
+          setDateFrom(v);
+          setPage(1);
+        }}
         dateTo={dateTo}
-        onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+        onDateToChange={(v) => {
+          setDateTo(v);
+          setPage(1);
+        }}
         onClear={() => {
           setSearchQuery("");
           setStatusFilter("all");

@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getTaxonomies, api, createCourse, updateCourse, uploadCourseBrochure } from "../lib/api";
+import {
+  getTaxonomies,
+  api,
+  createCourse,
+  updateCourse,
+  uploadCourseBrochure,
+} from "../lib/api";
 import type { TaxonomyItem, CourseFormPayload } from "../lib/api";
 import {
   courseFormSchema,
@@ -226,7 +232,10 @@ export default function CourseForm() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [brochureFile, setBrochureFile] = useState<File | null>(null);
   const [brochureError, setBrochureError] = useState<string | null>(null);
-  const [sizeErrorModal, setSizeErrorModal] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ""});
+  const [sizeErrorModal, setSizeErrorModal] = useState<{
+    isOpen: boolean;
+    message: string;
+  }>({ isOpen: false, message: "" });
   const [imageError, setImageError] = useState<string | null>(null);
   const [taxonomies, setTaxonomies] = useState<{
     categories: TaxonomyItem[];
@@ -297,7 +306,8 @@ export default function CourseForm() {
     if (file.size > 2 * 1024 * 1024) {
       setSizeErrorModal({
         isOpen: true,
-        message: "File size exceeds the 2MB limit. Please reduce the size and upload a smaller PDF."
+        message:
+          "File size exceeds the 2MB limit. Please reduce the size and upload a smaller PDF.",
       });
       e.target.value = "";
       return setBrochureError("Max size 2MB");
@@ -354,14 +364,25 @@ export default function CourseForm() {
           const { data } = supabase.storage
             .from("course-images")
             .getPublicUrl(filename);
-            
-          const frontendUrl = import.meta.env.VITE_PERFXCEL_FRONTEND_URL || (import.meta.env.MODE === "production" ? "https://perfxcel.com" : "https://dev.perfxcel.com");
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://db-dev.dotevolve.net";
-          updatePayload.image_url = data.publicUrl.replace(supabaseUrl, frontendUrl);
+
+          const frontendUrl =
+            import.meta.env.VITE_PERFXCEL_FRONTEND_URL ||
+            (import.meta.env.MODE === "production"
+              ? "https://perfxcel.com"
+              : "https://dev.perfxcel.com");
+          const supabaseUrl =
+            import.meta.env.VITE_SUPABASE_URL || "https://db-dev.dotevolve.net";
+          updatePayload.image_url = data.publicUrl.replace(
+            supabaseUrl,
+            frontendUrl,
+          );
         }
 
         if (brochureFile && savedCourse.short_code) {
-          const result = await uploadCourseBrochure(brochureFile, savedCourse.short_code);
+          const result = await uploadCourseBrochure(
+            brochureFile,
+            savedCourse.short_code,
+          );
           updatePayload.brochure_url = result.url;
         }
 
@@ -373,10 +394,11 @@ export default function CourseForm() {
     } catch (err: any) {
       let errorMsg = err.message || "";
       if (errorMsg === "Network Error") {
-        errorMsg = "Network Error: The uploaded file (image or brochure) might be too large for the server configuration (e.g. Nginx limit). Please try a smaller file or ask your admin to increase the limit.";
+        errorMsg =
+          "Network Error: The uploaded file (image or brochure) might be too large for the server configuration (e.g. Nginx limit). Please try a smaller file or ask your admin to increase the limit.";
         setSizeErrorModal({
           isOpen: true,
-          message: errorMsg
+          message: errorMsg,
         });
         return;
       }
@@ -547,10 +569,13 @@ export default function CourseForm() {
               className="bg-white"
             />
             <p className="mt-1 text-xs text-gray-500">
-              {(watch("overview") ?? "").length}/5000 characters. Displayed at the top of the public course page.
+              {(watch("overview") ?? "").length}/5000 characters. Displayed at
+              the top of the public course page.
             </p>
             {errors.overview && (
-              <p className="mt-1 text-sm text-red-600">{errors.overview.message as string}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.overview.message as string}
+              </p>
             )}
           </div>
 

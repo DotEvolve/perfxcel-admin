@@ -144,7 +144,9 @@ export const updateSettings = async (payload: {
   return response.data;
 };
 
-export const uploadTrainingPlan = async (file: File): Promise<{ url: string }> => {
+export const uploadTrainingPlan = async (
+  file: File,
+): Promise<{ url: string }> => {
   const form = new FormData();
   form.append("file", file);
   const response = await api.post("/upload/training-plan", form, {
@@ -166,7 +168,10 @@ export const downloadTrainingPlanFile = async (): Promise<void> => {
   link.parentNode?.removeChild(link);
 };
 
-export const uploadCourseBrochure = async (file: File, shortCode: string): Promise<{ url: string; filename: string }> => {
+export const uploadCourseBrochure = async (
+  file: File,
+  shortCode: string,
+): Promise<{ url: string; filename: string }> => {
   const form = new FormData();
   form.append("file", file);
   form.append("short_code", shortCode);

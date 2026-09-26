@@ -72,7 +72,16 @@ export default function Enrollments() {
 
   useEffect(() => {
     loadEnrollments();
-  }, [page, limit, searchQuery, statusFilter, sortField, sortOrder, dateFrom, dateTo]);
+  }, [
+    page,
+    limit,
+    searchQuery,
+    statusFilter,
+    sortField,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  ]);
 
   const executeUpdateStatus = async (id: string, status: string) => {
     setUpdating(id);
@@ -209,19 +218,31 @@ export default function Enrollments() {
 
       <FilterBar
         search={searchQuery}
-        onSearchChange={(v) => { setSearchQuery(v); setPage(1); }}
+        onSearchChange={(v) => {
+          setSearchQuery(v);
+          setPage(1);
+        }}
         statusOptions={[
           { label: "Pending", value: "pending" },
           { label: "In Progress", value: "in_progress" },
           { label: "Achieved", value: "achieved" },
-          { label: "Dropped", value: "dropped" }
+          { label: "Dropped", value: "dropped" },
         ]}
         status={statusFilter}
-        onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+        onStatusChange={(v) => {
+          setStatusFilter(v);
+          setPage(1);
+        }}
         dateFrom={dateFrom}
-        onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+        onDateFromChange={(v) => {
+          setDateFrom(v);
+          setPage(1);
+        }}
         dateTo={dateTo}
-        onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+        onDateToChange={(v) => {
+          setDateTo(v);
+          setPage(1);
+        }}
         onClear={() => {
           setSearchQuery("");
           setStatusFilter("all");

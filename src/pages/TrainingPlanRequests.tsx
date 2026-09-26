@@ -6,14 +6,7 @@ import {
   deleteTrainingPlans,
   hardDeleteTrainingPlan,
 } from "../lib/api";
-import {
-  Trash2,
-  Send,
-  ShieldX,
-  ShieldOff,
-  Plus,
-  Download,
-} from "lucide-react";
+import { Trash2, Send, ShieldX, ShieldOff, Plus, Download } from "lucide-react";
 import ConfirmationModal from "../components/ConfirmationModal";
 import FilterBar from "../components/FilterBar";
 
@@ -355,11 +348,20 @@ export default function TrainingPlanRequests() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <FilterBar
           search={search}
-          onSearchChange={(v) => { setSearch(v); setPage(1); }}
+          onSearchChange={(v) => {
+            setSearch(v);
+            setPage(1);
+          }}
           dateFrom={dateFrom}
-          onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+          onDateFromChange={(v) => {
+            setDateFrom(v);
+            setPage(1);
+          }}
           dateTo={dateTo}
-          onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+          onDateToChange={(v) => {
+            setDateTo(v);
+            setPage(1);
+          }}
           onClear={() => {
             setSearch("");
             setDateFrom("");

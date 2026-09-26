@@ -115,18 +115,30 @@ export default function Enquiries() {
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         <FilterBar
           search={search}
-          onSearchChange={(v) => { setSearch(v); setPage(1); }}
+          onSearchChange={(v) => {
+            setSearch(v);
+            setPage(1);
+          }}
           statusOptions={[
             { label: "New", value: "new" },
             { label: "Contacted", value: "contacted" },
-            { label: "Closed", value: "closed" }
+            { label: "Closed", value: "closed" },
           ]}
           status={status}
-          onStatusChange={(v) => { setStatus(v); setPage(1); }}
+          onStatusChange={(v) => {
+            setStatus(v);
+            setPage(1);
+          }}
           dateFrom={dateFrom}
-          onDateFromChange={(v) => { setDateFrom(v); setPage(1); }}
+          onDateFromChange={(v) => {
+            setDateFrom(v);
+            setPage(1);
+          }}
           dateTo={dateTo}
-          onDateToChange={(v) => { setDateTo(v); setPage(1); }}
+          onDateToChange={(v) => {
+            setDateTo(v);
+            setPage(1);
+          }}
           onClear={() => {
             setSearch("");
             setStatus("all");

@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { getSettings, updateSettings, uploadTrainingPlan, downloadTrainingPlanFile } from "../lib/api";
+import {
+  getSettings,
+  updateSettings,
+  uploadTrainingPlan,
+  downloadTrainingPlanFile,
+} from "../lib/api";
 import { Alert } from "@dotevolve/ui-kit";
 import ConfirmationModal from "../components/ConfirmationModal";
 
@@ -15,7 +20,10 @@ export default function Settings() {
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [sizeErrorModal, setSizeErrorModal] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ""});
+  const [sizeErrorModal, setSizeErrorModal] = useState<{
+    isOpen: boolean;
+    message: string;
+  }>({ isOpen: false, message: "" });
 
   useEffect(() => {
     getSettings()
@@ -146,7 +154,8 @@ export default function Settings() {
               if (file.size > 5 * 1024 * 1024) {
                 setSizeErrorModal({
                   isOpen: true,
-                  message: "File size exceeds the 5MB limit. Please reduce the size and upload a smaller file."
+                  message:
+                    "File size exceeds the 5MB limit. Please reduce the size and upload a smaller file.",
                 });
                 if (fileInputRef.current) fileInputRef.current.value = "";
                 return;
@@ -162,10 +171,11 @@ export default function Settings() {
               } catch (err: any) {
                 let errorMsg = err.message || "Failed to upload training plan.";
                 if (errorMsg === "Network Error") {
-                  errorMsg = "Network Error: The file might be too large for the server configuration (e.g. Nginx or Cloudflare limit). Please try a smaller file (under 1MB) or ask your admin to increase the limit.";
+                  errorMsg =
+                    "Network Error: The file might be too large for the server configuration (e.g. Nginx or Cloudflare limit). Please try a smaller file (under 1MB) or ask your admin to increase the limit.";
                   setSizeErrorModal({
                     isOpen: true,
-                    message: errorMsg
+                    message: errorMsg,
                   });
                   return;
                 }
